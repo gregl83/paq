@@ -1,3 +1,3 @@
 fn main() {
-    println!("Hello, world!");
+    println!("paq files to hash. coming soon!");
 }
