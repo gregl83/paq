@@ -12,3 +12,5 @@ homepage = "https://crates.io/crates/paq"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+walkdir = "2.3.2"
+rs_merkle = "1.1.0"
