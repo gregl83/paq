@@ -6,8 +6,9 @@ Hash a single file or all files in directory recursively.
 
 ## Installation
 
-1. Clone repository.
-2. Run `cargo install --path .` from root of repository.
+Requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+
+Run `cargo install paq`.
 
 ### Usage
 
