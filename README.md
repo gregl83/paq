@@ -2,7 +2,7 @@
 
 paq files to hash.
 
-Single command to hash files recursively (from current directory).
+Hash a single file or all files in directory recursively.
 
 ## Installation
 
@@ -11,7 +11,9 @@ Single command to hash files recursively (from current directory).
 
 ## Usage
 
-Run `paq` within directory intended to be root of hashed files. 
+Run `paq [src]` to hash src (file or directory). 
+
+For help, run `paq --help`.
 
 ## Caution
 
