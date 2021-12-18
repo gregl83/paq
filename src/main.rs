@@ -1,8 +1,8 @@
 use std::fs;
-use std::path::Path;
 use std::collections::BTreeMap;
 use walkdir::WalkDir;
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
+use clap::{App, Arg};
 
 fn get_paths(root: &str) -> BTreeMap<String, bool> {
     // BTreeMap ensures order of files/directories by path
@@ -39,10 +39,19 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> Option<String> {
 }
 
 fn main() {
-    // todo - add clap with dir argument
-    // todo - handle single file and multiple files (dir path)
     // todo - add error handling with messaging
-    let file_paths = get_paths(".");
+
+    let matches = App::new("paq")
+        .version("0.3.0")
+        .about("paq files to hash.")
+        .arg(Arg::with_name("src")
+            .help("Source to hash (path)")
+            .default_value(".")
+            .index(1))
+        .get_matches();
+
+    let root = matches.value_of("src").unwrap();
+    let file_paths = get_paths(root);
     let file_hashes = hash_paths(file_paths);
     let root = get_hashes_root(file_hashes).unwrap();
     println!("{}", root.as_str());

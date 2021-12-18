@@ -3,9 +3,10 @@ name = "paq"
 version = "0.2.0"
 authors = ["Gregory Langlais <general@gregorylanglais.com>"]
 edition = "2021"
-description = "paq files to hash"
+description = "paq files to hash."
 license = "MIT"
 readme = "README.md"
+keywords = ["paq", "hash", "sha256", "merkle", "tree", "directories"]
 repository = "https://github.com/gregl83/paq"
 homepage = "https://crates.io/crates/paq"
 
@@ -14,3 +15,4 @@ homepage = "https://crates.io/crates/paq"
 [dependencies]
 walkdir = "2.3.2"
 rs_merkle = "1.1.0"
+clap = "2.34.0"
