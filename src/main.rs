@@ -4,26 +4,32 @@ use walkdir::WalkDir;
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
 use clap::{App, Arg};
 
-fn get_paths(root: &str) -> BTreeMap<String, bool> {
+fn get_paths(root: &str) -> BTreeMap<String, (String, bool)> {
     // BTreeMap ensures order of files/directories by path
-    let mut paths = BTreeMap::<String, bool>::new();
+    let mut paths = BTreeMap::<String, (String, bool)>::new();
 
     for entry in WalkDir::new(root)
             .follow_links(true)
             .into_iter()
             .filter_map(|e| e.ok()) {
-        let path = String::from(entry.path().as_os_str().to_str().unwrap());
-        paths.insert(path, entry.path().is_file());
+        let path = entry.path();
+        let relative_path = String::from(
+            path.strip_prefix(&root).unwrap().to_str().unwrap()
+        );
+        let absolute_path = String::from(
+            path.as_os_str().to_str().unwrap()
+        );
+        paths.insert(relative_path, (absolute_path, path.is_file()));
     }
     paths
 }
 
-fn hash_paths(paths: BTreeMap<String, bool>) -> Vec<[u8; 32]> {
+fn hash_paths(paths: BTreeMap<String, (String, bool)>) -> Vec<[u8; 32]> {
     let mut hashes = Vec::<[u8; 32]>::new();
 
-    for (absolute_path, is_file) in paths {
-        // hash paths for fs changes other than file content
-        hashes.push(Sha256::hash(absolute_path.as_bytes()));
+    for (relative_path, (absolute_path, is_file)) in paths {
+        // hash paths for fs changes other than file content (must be relative to root)
+        hashes.push(Sha256::hash(relative_path.as_bytes()));
         // for files add hash of contents
         if is_file {
             let file_bytes = fs::read(absolute_path).unwrap();
@@ -51,8 +57,8 @@ fn main() {
         .get_matches();
 
     let root = matches.value_of("src").unwrap();
-    let file_paths = get_paths(root);
-    let file_hashes = hash_paths(file_paths);
-    let root = get_hashes_root(file_hashes).unwrap();
+    let paths = get_paths(root);
+    let hashes = hash_paths(paths);
+    let root = get_hashes_root(hashes).unwrap();
     println!("{}", root.as_str());
 }
