@@ -1,12 +1,12 @@
 [package]
 name = "paq"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Gregory Langlais <general@gregorylanglais.com>"]
 edition = "2021"
 description = "paq files to hash."
 license = "MIT"
 readme = "README.md"
-keywords = ["paq", "hash", "sha256", "merkle", "tree", "directories"]
+keywords = ["hash", "sha256", "merkle", "tree", "directories"]
 repository = "https://github.com/gregl83/paq"
 homepage = "https://crates.io/crates/paq"
 
