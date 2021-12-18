@@ -42,7 +42,7 @@ fn main() {
     // todo - add error handling with messaging
 
     let matches = App::new("paq")
-        .version("0.3.0")
+        .version("0.3.1")
         .about("paq files to hash.")
         .arg(Arg::with_name("src")
             .help("Source to hash (path)")
