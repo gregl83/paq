@@ -2,7 +2,6 @@ use std::fs;
 use std::collections::BTreeMap;
 use walkdir::WalkDir;
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
-use clap::{App, Arg};
 
 fn get_paths(root: &str) -> BTreeMap<String, (String, bool)> {
     // BTreeMap ensures order of files/directories by path
@@ -44,21 +43,22 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> Option<String> {
     MerkleTree::<Sha256>::from_leaves(&file_hashes).root_hex()
 }
 
-fn main() {
-    // todo - add error handling with messaging
-
-    let matches = App::new("paq")
-        .version("0.3.2")
-        .about("paq files to hash.")
-        .arg(Arg::with_name("src")
-            .help("Source to hash (path)")
-            .default_value(".")
-            .index(1))
-        .get_matches();
-
-    let root = matches.value_of("src").unwrap();
-    let paths = get_paths(root);
+/// Hash file system source.
+///
+/// Source **must** be a path to a file or directory.
+///
+/// Uses `SHA256` hashing algorithm via `Merkle Tree`.
+///
+/// ```ignore
+/// use paq;
+///
+/// let source = "/path/to/source";
+/// let hash: String = paq::hash_source(source);
+///
+/// println!("{}", hash);
+/// ```
+pub fn hash_source(source: &str) -> String {
+    let paths = get_paths(source);
     let hashes = hash_paths(paths);
-    let root = get_hashes_root(hashes).unwrap();
-    println!("{}", root.as_str());
+    get_hashes_root(hashes).unwrap()
 }

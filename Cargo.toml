@@ -10,6 +10,14 @@ keywords = ["hash", "sha256", "merkle", "tree", "directories"]
 repository = "https://github.com/gregl83/paq"
 homepage = "https://crates.io/crates/paq"
 
+[lib]
+name = "paq"
+path = "src/lib.rs"
+
+[[bin]]
+name = "paq"
+path = "src/bin.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
