@@ -4,6 +4,10 @@ paq files to hash.
 
 Hash a single file or all files in directory recursively.
 
+For multiple files, the output hash is the consistent root of a merkle tree.
+
+Uses SHA256 hashing algorithm.
+
 ## Installation
 
 Requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
