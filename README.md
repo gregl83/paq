@@ -2,11 +2,11 @@
 
 paq files to hash.
 
-Hash a single file or all files in directory recursively.
+Produce hash from file or directory recursively.
 
-For multiple files, the output hash is the consistent root of a merkle tree.
+For directories, the output hash is the top hash, or root, of a [merkle tree](https://en.wikipedia.org/wiki/Merkle_tree).
 
-Uses SHA256 hashing algorithm.
+SHA256 hashing algorithm.
 
 ## Installation
 
