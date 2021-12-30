@@ -6,6 +6,8 @@ Hash file or directory (recursively).
 
 Directories output the `top hash`, or `root`, of a [merkle tree](https://en.wikipedia.org/wiki/Merkle_tree).
 
+Version Control System agnostic.
+
 Powered by `SHA256` hashing algorithm.
 
 ## Install Command
