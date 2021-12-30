@@ -19,9 +19,15 @@ fn main() {
             .help("Source to hash (filesystem path)")
             .default_value(".")
             .index(1))
+        .arg(Arg::with_name("ignore-hidden")
+            .help("Ignore files or directories starting with dot or full stop")
+            .long("ignore-hidden")
+            .short("i")
+        )
         .get_matches();
 
     let source = matches.value_of("src").unwrap();
-    let hash = lib::hash_source(source);
+    let ignore_hidden = matches.is_present("ignore-hidden");
+    let hash = lib::hash_source(source, ignore_hidden);
     println!("{}", hash);
 }
