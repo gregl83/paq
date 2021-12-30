@@ -2,13 +2,13 @@
 
 paq files to hash.
 
-Produce hash from file or directory recursively.
+Hash file or directory (recursively).
 
-For directories, the output hash is the top hash, or root, of a [merkle tree](https://en.wikipedia.org/wiki/Merkle_tree).
+Directories output the `top hash`, or `root`, of a [merkle tree](https://en.wikipedia.org/wiki/Merkle_tree).
 
-SHA256 hashing algorithm.
+Powered by `SHA256` hashing algorithm.
 
-## Installation
+## Install Command
 
 Requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
@@ -16,13 +16,13 @@ Run `cargo install paq`.
 
 ### Usage
 
-Run `paq [src]` to hash src (file or directory). 
+Run `paq [src]` to hash source file or directory. 
 
 For help, run `paq --help`.
 
-## Library
+## Use Crate
 
-Add `paq: "0.4.0"` to `Cargo.toml`.
+Add `paq` to project [dependencies](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-cratesio) in `Cargo.toml`.
 
 ### Usage
 
@@ -30,9 +30,9 @@ Add `paq: "0.4.0"` to `Cargo.toml`.
 use paq;
 
 let source = "/path/to/source";
-let hash: String = paq::hash_source(source);
+let source_hash: String = paq::hash_source(source);
 
-println!("{}", hash);
+println!("{}", source_hash);
 ```
 
 ## Caution

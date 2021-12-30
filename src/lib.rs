@@ -53,9 +53,9 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> Option<String> {
 /// use paq;
 ///
 /// let source = "/path/to/source";
-/// let hash: String = paq::hash_source(source);
+/// let source_hash: String = paq::hash_source(source);
 ///
-/// println!("{}", hash);
+/// println!("{}", source_hash);
 /// ```
 pub fn hash_source(source: &str) -> String {
     let paths = get_paths(source);

@@ -16,7 +16,7 @@ fn main() {
         .version("0.4.0")
         .about("paq files to hash.")
         .arg(Arg::with_name("src")
-            .help("Source to hash (path)")
+            .help("Source to hash (filesystem path)")
             .default_value(".")
             .index(1))
         .get_matches();
