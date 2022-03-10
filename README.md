@@ -36,6 +36,10 @@ let source_hash: String = paq::hash_source(source, ignore_hidden);
 println!("{}", source_hash);
 ```
 
+## Content Limitations
+
+[Git](https://git.wiki.kernel.org/index.php/ContentLimitations)
+
 ## Caution
 
 Needs tests!

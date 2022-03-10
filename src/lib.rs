@@ -28,6 +28,15 @@ fn get_paths(root: &str, ignore_hidden: bool) -> BTreeMap<String, (String, bool)
         .filter_entry(filter(ignore_hidden))
     {
         let directory_entry = entry.unwrap();
+
+        // fixme - test symlink
+
+        // fixme - test file owner
+
+        // fixme - test file rights
+
+        let directory_metadata = directory_entry.metadata().unwrap();
+
         let path = directory_entry.path();
         let relative_path = String::from(
             path.strip_prefix(&root).unwrap().to_str().unwrap()
@@ -77,6 +86,7 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> Option<String> {
 /// ```
 pub fn hash_source(source: &str, ignore_hidden: bool) -> String {
     let paths = get_paths(source, ignore_hidden);
+    println!("{:?}", paths);
     let hashes = hash_paths(paths);
     get_hashes_root(hashes).unwrap()
 }
