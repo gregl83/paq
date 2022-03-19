@@ -6,6 +6,8 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::result;
 
+pub const TEMP_DIRECTORY_NAME: &str = "paq";
+
 /// A convenient result type alias.
 pub type Result<T> = result::Result<T, Box<dyn error::Error + Send + Sync>>;
 
@@ -28,26 +30,20 @@ pub struct TempDir(PathBuf, PathBuf);
 #[cfg(feature = "test-cleanup")]
 impl Drop for TempDir {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        fs::remove_dir_all(&self.1).unwrap();
     }
 }
 
 impl TempDir {
     /// Create a new empty temporary directory under the system's configured
     /// temporary directory.
-    pub fn new() -> Result<TempDir> {
-        #[allow(deprecated)]
-        use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
-
+    pub fn new(name: &str) -> Result<TempDir> {
         static TRIES: usize = 100;
-        #[allow(deprecated)]
-        static COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
 
         let tmpdir = env::temp_dir();
         for _ in 0..TRIES {
-            let count = COUNTER.fetch_add(1, Ordering::SeqCst);
-            let root_path = tmpdir.join("paq");
-            let iteration_path = root_path.join(count.to_string());
+            let root_path = tmpdir.join(TEMP_DIRECTORY_NAME);
+            let iteration_path = root_path.join(name);
             if iteration_path.is_dir() {
                 continue;
             }
@@ -70,10 +66,6 @@ impl TempDir {
         let symlink_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
         Ok(symlink(target.as_os_str(), symlink_path.as_os_str()).expect("Unable to create symlink"))
     }
-
-    // todo - add file/folder permissions modification
-
-    // todo - add ownership modification?
 
     /// Return the underlying path to this temporary directory.
     pub fn path(&self) -> &Path {
