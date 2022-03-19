@@ -91,3 +91,34 @@ fn it_hashes_directory_with_file() {
     let hash_not_ignored = paq::hash_source(source, false);
     assert_eq!(hash_not_ignored, expectation);
 }
+
+#[test]
+fn it_hashes_directory_files_consistently() {
+    let expectation = "2f79669ee737bc3cd206e56066f99c81f691c8103e7a7bed04f735fe65d06b99";
+
+    let alpha_file_name = "alpha";
+    let alpha_file_contents = "alpha-body".as_bytes();
+    let bravo_file_name = "bravo";
+    let bravo_file_contents = "bravo-body".as_bytes();
+    let charlie_file_name = "charlie";
+    let charlie_file_contents = "charlie-body".as_bytes();
+    let one_file_name = "1";
+    let one_file_contents = "1-body".as_bytes();
+    let nine_file_name = "9";
+    let nine_file_contents = "9-body".as_bytes();
+
+    let dir = TempDir::new("it_hashes_directory_files_consistently").unwrap();
+    dir.new_file(alpha_file_name, alpha_file_contents).unwrap();
+    dir.new_file(bravo_file_name, bravo_file_contents).unwrap();
+    dir.new_file(charlie_file_name, charlie_file_contents).unwrap();
+    dir.new_file(one_file_name, one_file_contents).unwrap();
+    dir.new_file(nine_file_name, nine_file_contents).unwrap();
+    let source = dir.path().as_os_str().to_str().unwrap();
+
+    for _ in 0..50 {
+        let hash_ignored = paq::hash_source(source, true);
+        assert_eq!(hash_ignored, expectation);
+        let hash_not_ignored = paq::hash_source(source, false);
+        assert_eq!(hash_not_ignored, expectation);
+    }
+}
