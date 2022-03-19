@@ -23,8 +23,9 @@ macro_rules! err {
 /// We use this in lieu of tempfile because tempfile brings in too many
 /// dependencies.
 #[derive(Debug)]
-pub struct TempDir(PathBuf);
+pub struct TempDir(PathBuf, PathBuf);
 
+#[cfg(feature = "test-cleanup")]
 impl Drop for TempDir {
     fn drop(&mut self) {
         fs::remove_dir_all(&self.0).unwrap();
@@ -45,14 +46,15 @@ impl TempDir {
         let tmpdir = env::temp_dir();
         for _ in 0..TRIES {
             let count = COUNTER.fetch_add(1, Ordering::SeqCst);
-            let path = tmpdir.join("paq").join(count.to_string());
-            if path.is_dir() {
+            let root_path = tmpdir.join("paq");
+            let iteration_path = root_path.join(count.to_string());
+            if iteration_path.is_dir() {
                 continue;
             }
-            fs::create_dir_all(&path).map_err(|e| {
-                err!("failed to create {}: {}", path.display(), e)
+            fs::create_dir_all(&iteration_path).map_err(|e| {
+                err!("failed to create {}: {}", iteration_path.display(), e)
             })?;
-            return Ok(TempDir(path));
+            return Ok(TempDir(root_path, iteration_path));
         }
         Err(err!("failed to create temp dir after {} tries", TRIES))
     }
@@ -66,11 +68,15 @@ impl TempDir {
     /// Create a new symlink in temporary directory to target.
     pub fn new_symlink(&self, name: &str, target: PathBuf) -> Result<()> {
         let symlink_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        Ok(symlink(symlink_path.as_os_str(), symlink_path.as_os_str()).expect("Unable to create symlink"))
+        Ok(symlink(target.as_os_str(), symlink_path.as_os_str()).expect("Unable to create symlink"))
     }
+
+    // todo - add file/folder permissions modification
+
+    // todo - add ownership modification?
 
     /// Return the underlying path to this temporary directory.
     pub fn path(&self) -> &Path {
-        &self.0
+        &self.1
     }
 }

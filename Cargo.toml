@@ -24,3 +24,7 @@ path = "src/bin.rs"
 walkdir = "2.3.2"
 rs_merkle = "1.1.0"
 clap = "2.34.0"
+
+[features]
+default = ["test-cleanup"]
+test-cleanup = []
