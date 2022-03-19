@@ -7,6 +7,23 @@ mod utils;
 use utils::TempDir;
 
 #[test]
+fn it_hashes_single_file() {
+    let expectation = "357dc7acd9dd411e9bd92945cad58062559910dbc229a7f86a21687e626a955e";
+
+    let file_name = "alpha";
+    let file_contents = "alpha-body".as_bytes();
+    let dir = TempDir::new("it_hashes_single_file").unwrap();
+    dir.new_file(file_name, file_contents).unwrap();
+    let file_directory = dir.path().join(file_name);
+    let source = file_directory.as_os_str().to_str().unwrap();
+
+    let hash_ignored = paq::hash_source(source, true);
+    assert_eq!(hash_ignored, expectation);
+    let hash_not_ignored = paq::hash_source(source, false);
+    assert_eq!(hash_not_ignored, expectation);
+}
+
+#[test]
 fn it_hashes_directory() {
     let expectation = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -60,15 +77,14 @@ fn it_hashes_directory_symlink_without_following() {
 }
 
 #[test]
-fn it_hashes_single_file() {
-    let expectation = "357dc7acd9dd411e9bd92945cad58062559910dbc229a7f86a21687e626a955e";
+fn it_hashes_directory_with_file() {
+    let expectation = "1488f4fcc0eed29cd5fdba38b202f798b8cd7d4541849cd0a7969334b399477e";
 
     let file_name = "alpha";
     let file_contents = "alpha-body".as_bytes();
-    let dir = TempDir::new("it_hashes_single_file").unwrap();
+    let dir = TempDir::new("it_hashes_directory_with_file").unwrap();
     dir.new_file(file_name, file_contents).unwrap();
-    let file_directory = dir.path().join(file_name);
-    let source = file_directory.as_os_str().to_str().unwrap();
+    let source = dir.path().as_os_str().to_str().unwrap();
 
     let hash_ignored = paq::hash_source(source, true);
     assert_eq!(hash_ignored, expectation);
