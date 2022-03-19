@@ -93,6 +93,23 @@ fn it_hashes_directory_with_file() {
 }
 
 #[test]
+fn it_hashes_directory_with_ignored_file() {
+    let expectation_not_ignored = "8830a5da097b494a288e91963a887a524ca0fcf94d1fd7fc139a78d890987bca";
+    let expectation_ignored = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+    let file_name = ".ignored";
+    let file_contents = ".ignored-body".as_bytes();
+    let dir = TempDir::new("it_hashes_directory_with_ignored_file").unwrap();
+    dir.new_file(file_name, file_contents).unwrap();
+    let source = dir.path().as_os_str().to_str().unwrap();
+
+    let hash_ignored = paq::hash_source(source, true);
+    assert_eq!(hash_ignored, expectation_ignored);
+    let hash_not_ignored = paq::hash_source(source, false);
+    assert_eq!(hash_not_ignored, expectation_not_ignored);
+}
+
+#[test]
 fn it_hashes_directory_files_consistently() {
     let expectation = "2f79669ee737bc3cd206e56066f99c81f691c8103e7a7bed04f735fe65d06b99";
 
