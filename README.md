@@ -44,11 +44,18 @@ println!("{}", source_hash);
 
 ## Content Limitations
 
-[Git](https://git.wiki.kernel.org/index.php/ContentLimitations)
+Hashes are generated using file system content as input data to the `SHA256` hashing algorithm.
 
-## Caution
+By design, `paq` does NOT include file system metadata in hash input such as:
 
-Needs tests!
+- File modes
+- File ownership
+- File modification and access times
+- File ACLs and extended attributes
+- Hard links
+- Symlink target contents
+
+Additionally, files or directory contents starting with dot or full stop can be ignored.
 
 ## License
 
