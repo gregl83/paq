@@ -6,6 +6,8 @@ Hash file or directory (recursively).
 
 Directories output the `top hash`, or `root`, of a [merkle tree](https://en.wikipedia.org/wiki/Merkle_tree).
 
+Version Control System agnostic.
+
 Powered by `SHA256` hashing algorithm.
 
 ## Install Command
@@ -30,7 +32,7 @@ Add `paq` to project [dependencies](https://doc.rust-lang.org/cargo/reference/sp
 use paq;
 
 let source = "/path/to/source";
-let ignore_hidden = true;
+let ignore_hidden = true; // .dir or .file
 let source_hash: String = paq::hash_source(source, ignore_hidden);
 
 println!("{}", source_hash);
