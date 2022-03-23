@@ -69,7 +69,7 @@ let source_hash: String = paq::hash_source(source, ignore_hidden);
 assert_eq!(source_hash, "2a13feb1fd6f81de8229de8f676e854c151b091e5e04f2c4d27bcde4e448623b");
 ```
 
-Note: expect different results if `ignore_hidden` is set to `false`.
+Expect different results if `ignore_hidden` is set to `false`.
 
 ## License
 

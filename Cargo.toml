@@ -1,6 +1,6 @@
 [package]
 name = "paq"
-version = "0.5.1"
+version = "1.0.0"
 authors = ["Gregory Langlais <general@gregorylanglais.com>"]
 edition = "2021"
 description = "paq files to hash."
