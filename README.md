@@ -55,7 +55,7 @@ By design, `paq` does NOT include file system metadata in hash input such as:
 - Hard links
 - Symlink target contents
 
-Additionally, files or directory contents starting with dot or full stop can be ignored.
+Additionally, files or directory contents starting with dot or full stop *can* optionally be ignored.
 
 ## License
 
