@@ -57,6 +57,20 @@ By design, `paq` does NOT include file system metadata in hash input such as:
 
 Additionally, files or directory contents starting with dot or full stop can be ignored.
 
+## Example
+
+The `./example` directory contains some sample files, subdirectory and a symlink to test `paq` functionality.
+
+```rust
+let source = "example";
+let ignore_hidden = true;
+let source_hash: String = paq::hash_source(source, ignore_hidden);
+
+assert_eq!(source_hash, "2a13feb1fd6f81de8229de8f676e854c151b091e5e04f2c4d27bcde4e448623b");
+```
+
+Note: expect different results if `ignore_hidden` is set to `false`.
+
 ## License
 
 [MIT](LICENSE)

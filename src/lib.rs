@@ -66,14 +66,14 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> Option<String> {
 ///
 /// Uses `SHA256` hashing algorithm via `Merkle Tree`.
 ///
-/// ```ignore
+/// ```
 /// use paq;
 ///
-/// let source = "/path/to/source";
+/// let source = "example";
 /// let ignore_hidden = true;
 /// let source_hash: String = paq::hash_source(source, ignore_hidden);
 ///
-/// println!("{}", source_hash);
+/// assert_eq!(source_hash, "2a13feb1fd6f81de8229de8f676e854c151b091e5e04f2c4d27bcde4e448623b");
 /// ```
 pub fn hash_source(source: &str, ignore_hidden: bool) -> String {
     let paths = get_paths(source, ignore_hidden);
