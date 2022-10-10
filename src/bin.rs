@@ -6,8 +6,7 @@
 //! ```
 
 use clap::{App, Arg};
-
-mod lib;
+use paq::hash_source;
 
 fn main() {
     // todo - add error handling with messaging
@@ -28,6 +27,6 @@ fn main() {
 
     let source = matches.value_of("src").unwrap();
     let ignore_hidden = matches.is_present("ignore-hidden");
-    let hash = lib::hash_source(source, ignore_hidden);
+    let hash = hash_source(source, ignore_hidden);
     println!("{}", hash);
 }
