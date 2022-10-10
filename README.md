@@ -8,11 +8,9 @@ paq files to hash.
 
 Hash file or directory (recursively).
 
-Directories output the `top hash`, or `root`, of a [merkle tree](https://en.wikipedia.org/wiki/Merkle_tree).
-
 Version Control System agnostic.
 
-Powered by `SHA256` hashing algorithm.
+Powered by `blake3` cryptographic hashing algorithm.
 
 ## Install Command
 
@@ -37,14 +35,14 @@ use paq;
 
 let source = "/path/to/source";
 let ignore_hidden = true; // .dir or .file
-let source_hash: String = paq::hash_source(source, ignore_hidden);
+let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
 
 println!("{}", source_hash);
 ```
 
 ## Content Limitations
 
-Hashes are generated using file system content as input data to the `SHA256` hashing algorithm.
+Hashes are generated using file system content as input data to the `blake3` hashing algorithm.
 
 By design, `paq` does NOT include file system metadata in hash input such as:
 
@@ -62,11 +60,13 @@ Additionally, files or directory contents starting with dot or full stop *can* o
 The `./example` directory contains some sample files, subdirectory and a symlink to test `paq` functionality.
 
 ```rust
+use paq;
+
 let source = "example";
 let ignore_hidden = true;
-let source_hash: String = paq::hash_source(source, ignore_hidden);
+let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
 
-assert_eq!(source_hash, "2a13feb1fd6f81de8229de8f676e854c151b091e5e04f2c4d27bcde4e448623b");
+assert_eq!(&source_hash[..], "778c013fbdb4d129357ec8023ea1d147e60a014858cfc2dd998af6c946e802a9");
 ```
 
 Expect different results if `ignore_hidden` is set to `false`.

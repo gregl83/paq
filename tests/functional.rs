@@ -1,14 +1,12 @@
 use std::env;
 use std::path::PathBuf;
-use paq::hash_source;
 
 mod utils;
-
 use utils::TempDir;
 
 #[test]
 fn it_hashes_single_file() {
-    let expectation = "357dc7acd9dd411e9bd92945cad58062559910dbc229a7f86a21687e626a955e";
+    let expectation = "219a256c060e2fc673e4dd62f8ade3acb5649052c2032ac313b4d7b60eda6eb4";
 
     let file_name = "alpha";
     let file_contents = "alpha-body".as_bytes();
@@ -18,27 +16,27 @@ fn it_hashes_single_file() {
     let source = file_directory.as_os_str().to_str().unwrap();
 
     let hash_ignored = paq::hash_source(source, true);
-    assert_eq!(hash_ignored, expectation);
+    assert_eq!(&hash_ignored[..], expectation);
     let hash_not_ignored = paq::hash_source(source, false);
-    assert_eq!(hash_not_ignored, expectation);
+    assert_eq!(&hash_not_ignored[..], expectation);
 }
 
 #[test]
 fn it_hashes_directory() {
-    let expectation = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
 
     let dir = TempDir::new("it_hashes_directory").unwrap();
     let source = dir.path().as_os_str().to_str().unwrap();
 
     let hash_ignored = paq::hash_source(source, true);
-    assert_eq!(hash_ignored, expectation);
+    assert_eq!(&hash_ignored[..], expectation);
     let hash_not_ignored = paq::hash_source(source, false);
-    assert_eq!(hash_not_ignored, expectation);
+    assert_eq!(&hash_not_ignored[..], expectation);
 }
 
 #[test]
 fn it_hashes_directory_from_any_path() {
-    let expectation = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
 
     let dir = TempDir::new("it_hashes_directory_from_any_path").unwrap();
     let source = dir.path().as_os_str().to_str().unwrap();
@@ -46,23 +44,23 @@ fn it_hashes_directory_from_any_path() {
     let new_path = PathBuf::from("/");
 
     let hash_ignored = paq::hash_source(source, true);
-    assert_eq!(hash_ignored, expectation);
+    assert_eq!(&hash_ignored[..], expectation);
     let hash_ignored = paq::hash_source(source, false);
-    assert_eq!(hash_ignored, expectation);
+    assert_eq!(&hash_ignored[..], expectation);
 
     env::set_current_dir(new_path).unwrap();
 
     let hash_ignored = paq::hash_source(source, true);
-    assert_eq!(hash_ignored, expectation);
+    assert_eq!(&hash_ignored[..], expectation);
     let hash_ignored = paq::hash_source(source, false);
-    assert_eq!(hash_ignored, expectation);
+    assert_eq!(&hash_ignored[..], expectation);
 
     env::set_current_dir(original_path).unwrap();
 }
 
 #[test]
 fn it_hashes_directory_symlink_without_following() {
-    let expectation = "778e05e084f80adb22043d7e45ad7236e1fe07bfb9983f5f26867c205dcc0112";
+    let expectation = "47e609d5f708cfef0ddcc7f8f0f6226b63c93e9a0478bdda672e334cc020c70e";
 
     let symlink_name = "symlink";
     let symlink_target = env::current_dir().unwrap();
@@ -71,14 +69,14 @@ fn it_hashes_directory_symlink_without_following() {
     let source = dir.path().as_os_str().to_str().unwrap();
 
     let hash_ignored = paq::hash_source(source, true);
-    assert_eq!(hash_ignored, expectation);
+    assert_eq!(&hash_ignored[..], expectation);
     let hash_ignored = paq::hash_source(source, false);
-    assert_eq!(hash_ignored, expectation);
+    assert_eq!(&hash_ignored[..], expectation);
 }
 
 #[test]
 fn it_hashes_directory_with_file() {
-    let expectation = "1488f4fcc0eed29cd5fdba38b202f798b8cd7d4541849cd0a7969334b399477e";
+    let expectation = "5a9755e11702b86557541d1d5d9d24212e6b1d4d2a1d09312dd96f0dfa92654b";
 
     let file_name = "alpha";
     let file_contents = "alpha-body".as_bytes();
@@ -87,15 +85,15 @@ fn it_hashes_directory_with_file() {
     let source = dir.path().as_os_str().to_str().unwrap();
 
     let hash_ignored = paq::hash_source(source, true);
-    assert_eq!(hash_ignored, expectation);
+    assert_eq!(&hash_ignored[..], expectation);
     let hash_not_ignored = paq::hash_source(source, false);
-    assert_eq!(hash_not_ignored, expectation);
+    assert_eq!(&hash_not_ignored[..], expectation);
 }
 
 #[test]
 fn it_hashes_directory_with_ignored_file() {
-    let expectation_not_ignored = "8830a5da097b494a288e91963a887a524ca0fcf94d1fd7fc139a78d890987bca";
-    let expectation_ignored = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    let expectation_not_ignored = "5eef2d7a4bf361cf3f89576d65db7ef2fb4e2745b6c460a96c6ceec07aa14a42";
+    let expectation_ignored = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
 
     let file_name = ".ignored";
     let file_contents = ".ignored-body".as_bytes();
@@ -104,31 +102,31 @@ fn it_hashes_directory_with_ignored_file() {
     let source = dir.path().as_os_str().to_str().unwrap();
 
     let hash_ignored = paq::hash_source(source, true);
-    assert_eq!(hash_ignored, expectation_ignored);
+    assert_eq!(&hash_ignored[..], expectation_ignored);
     let hash_not_ignored = paq::hash_source(source, false);
-    assert_eq!(hash_not_ignored, expectation_not_ignored);
+    assert_eq!(&hash_not_ignored[..], expectation_not_ignored);
 }
 
 #[test]
 fn it_hashes_directory_with_ignored_subdirectory() {
-    let expectation_not_ignored = "a1bc31ab0a561838865874a00911ae0bd19e9ee41ceb1014becc61b247278af8";
-    let expectation_ignored = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    let expectation_not_ignored = "f38a56a87aca98131b2fa5914fd13bc11f5823602293e8d84b5c69000b33ebf2";
+    let expectation_ignored = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
 
     let dir = TempDir::new("it_hashes_directory_with_ignored_subdirectory").unwrap();
     let source = dir.path().as_os_str().to_str().unwrap();
 
     let subdir = TempDir::new("it_hashes_directory_with_ignored_subdirectory/.test").unwrap();
     let hash_ignored = paq::hash_source(source, true);
-    assert_eq!(hash_ignored, expectation_ignored);
+    assert_eq!(&hash_ignored[..], expectation_ignored);
     let hash_not_ignored = paq::hash_source(source, false);
-    assert_eq!(hash_not_ignored, expectation_not_ignored);
+    assert_eq!(&hash_not_ignored[..], expectation_not_ignored);
 
     println!("prevent early subdir drop for: {}", subdir.path().as_os_str().to_str().unwrap())
 }
 
 #[test]
 fn it_hashes_directory_files_consistently() {
-    let expectation = "2f79669ee737bc3cd206e56066f99c81f691c8103e7a7bed04f735fe65d06b99";
+    let expectation = "50ec0be65febd8b1c22723b7c0e17901c6b0e9a3719364b8d592e82159ba0280";
 
     let alpha_file_name = "alpha";
     let alpha_file_contents = "alpha-body".as_bytes();
@@ -151,8 +149,8 @@ fn it_hashes_directory_files_consistently() {
 
     for _ in 0..50 {
         let hash_ignored = paq::hash_source(source, true);
-        assert_eq!(hash_ignored, expectation);
+        assert_eq!(&hash_ignored[..], expectation);
         let hash_not_ignored = paq::hash_source(source, false);
-        assert_eq!(hash_not_ignored, expectation);
+        assert_eq!(&hash_not_ignored[..], expectation);
     }
 }
