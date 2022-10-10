@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::prelude::*;
-use arrayvec::ArrayString;
+pub use arrayvec::ArrayString;
 use rayon::prelude::*;
 use blake3::Hasher;
 use walkdir::{WalkDir, DirEntry};
@@ -82,11 +82,10 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
 ///
 /// ```
 /// use paq;
-/// use arrayvec::ArrayString;
 ///
 /// let source = "example";
 /// let ignore_hidden = true;
-/// let source_hash: ArrayString<64> = paq::hash_source(source, ignore_hidden);
+/// let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
 ///
 /// assert_eq!(&source_hash[..], "778c013fbdb4d129357ec8023ea1d147e60a014858cfc2dd998af6c946e802a9");
 /// ```

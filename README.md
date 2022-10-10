@@ -10,7 +10,7 @@ Hash file or directory (recursively).
 
 Version Control System agnostic.
 
-Powered by `blake3` hashing algorithm.
+Powered by `blake3` cryptographic hashing algorithm.
 
 ## Install Command
 
@@ -35,7 +35,7 @@ use paq;
 
 let source = "/path/to/source";
 let ignore_hidden = true; // .dir or .file
-let source_hash: String = paq::hash_source(source, ignore_hidden);
+let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
 
 println!("{}", source_hash);
 ```
@@ -61,11 +61,10 @@ The `./example` directory contains some sample files, subdirectory and a symlink
 
 ```rust
 use paq;
-use arrayvec::ArrayString;
 
 let source = "example";
 let ignore_hidden = true;
-let source_hash: ArrayString<64> = paq::hash_source(source, ignore_hidden);
+let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
 
 assert_eq!(&source_hash[..], "778c013fbdb4d129357ec8023ea1d147e60a014858cfc2dd998af6c946e802a9");
 ```

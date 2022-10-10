@@ -1,6 +1,5 @@
 use std::env;
 use std::error;
-use std::os::unix::fs::symlink;
 use std::fs::{self};
 use std::path::{Path, PathBuf};
 use std::result;
@@ -58,12 +57,6 @@ impl TempDir {
     pub fn new_file(&self, name: &str, data: &[u8]) -> Result<()> {
         let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
         Ok(fs::write(file_path.as_os_str(), data).expect("Unable to write file"))
-    }
-
-    /// Create a new symlink in temporary directory to target.
-    pub fn new_symlink(&self, name: &str, target: PathBuf) -> Result<()> {
-        let symlink_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        Ok(symlink(target.as_os_str(), symlink_path.as_os_str()).expect("Unable to create symlink"))
     }
 
     /// Return the underlying path to this temporary directory.
