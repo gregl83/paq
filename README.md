@@ -8,8 +8,6 @@ paq files to hash.
 
 Hash file or directory (recursively).
 
-Version Control System agnostic.
-
 Powered by `blake3` cryptographic hashing algorithm.
 
 ## Install Command
@@ -24,7 +22,7 @@ Run `paq [src]` to hash source file or directory.
 
 For help, run `paq --help`.
 
-## Use Crate
+## Use Crate Library
 
 Add `paq` to project [dependencies](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-cratesio) in `Cargo.toml`.
 
