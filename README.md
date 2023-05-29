@@ -71,6 +71,13 @@ assert_eq!(&source_hash[..], "778c013fbdb4d129357ec8023ea1d147e60a014858cfc2dd99
 
 Expect different results if `ignore_hidden` is set to `false`.
 
+## How it Works
+
+1. Recursively get all files for a given source argument.
+2. Hash each file using the file's relative path and content as input to the hash function.
+3. Sort the list of file hashes.
+4. Calculate the final hash using the file hashes concatenated as input to the hash function.
+
 ## License
 
 [MIT](LICENSE)
