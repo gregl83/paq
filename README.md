@@ -58,9 +58,17 @@ Additionally, files or directory contents starting with dot or full stop *can* o
 3. Sort the list of file hashes.
 4. Calculate the final hash using the file hashes concatenated as input to the hash function.
 
-## Example
+## Example Directory
 
 The `./example` directory contains some sample files, subdirectory and a symlink to test `paq` functionality.
+
+### Using CLI
+
+```paq ./example```
+
+Expect different results if `-i` flag argument is used.
+
+### Using Library
 
 ```rust
 
