@@ -73,7 +73,7 @@ fn hash_paths(root: &str, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
         }
         *hasher.finalize().as_bytes()
     }).collect();
-    hashes.sort();
+    hashes.sort_unstable();
     hashes
 }
 
