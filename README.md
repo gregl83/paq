@@ -4,17 +4,13 @@
 
 # paq
 
-paq files to hash.
-
 Hash file or directory (recursively).
-
-Version Control System agnostic.
 
 Powered by `blake3` cryptographic hashing algorithm.
 
-## Install Command
+## Use CLI Command
 
-Requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+Installation requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 Run `cargo install paq`.
 
@@ -24,7 +20,7 @@ Run `paq [src]` to hash source file or directory.
 
 For help, run `paq --help`.
 
-## Use Crate
+## Use Crate Library
 
 Add `paq` to project [dependencies](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-cratesio) in `Cargo.toml`.
 
@@ -55,18 +51,29 @@ By design, `paq` does NOT include file system metadata in hash input such as:
 
 Additionally, files or directory contents starting with dot or full stop *can* optionally be ignored.
 
+## How it Works
+
+1. Recursively get all files for a given source argument.
+2. Hash each file using the file's relative path and content as input to the hash function.
+3. Sort the list of file hashes.
+4. Calculate the final hash using the file hashes concatenated as input to the hash function.
+
 ## Example
 
 The `./example` directory contains some sample files, subdirectory and a symlink to test `paq` functionality.
 
 ```rust
+
 use paq;
 
 let source = "example";
+
 let ignore_hidden = true;
+
 let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
 
 assert_eq!(&source_hash[..], "778c013fbdb4d129357ec8023ea1d147e60a014858cfc2dd998af6c946e802a9");
+
 ```
 
 Expect different results if `ignore_hidden` is set to `false`.
