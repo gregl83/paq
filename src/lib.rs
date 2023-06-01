@@ -1,5 +1,6 @@
 use std::fs;
 use std::io::prelude::*;
+use std::path::PathBuf;
 pub use arrayvec::ArrayString;
 use rayon::prelude::*;
 use blake3::Hasher;
@@ -20,34 +21,46 @@ fn filter(ignore_hidden: bool) -> impl FnMut(&DirEntry) -> bool {
     }
 }
 
-fn get_paths(root: &str, ignore_hidden: bool) -> Vec<(String, String, bool)> {
-    let mut paths= Vec::<(String, String, bool)>::new();
-
-    for entry in WalkDir::new(root)
+fn get_paths(root: &str, ignore_hidden: bool) -> Vec<PathBuf> {
+    WalkDir::new(root)
         .follow_links(false)
         .into_iter()
         .filter_entry(filter(ignore_hidden))
-    {
-        let directory_entry = entry.unwrap();
-        let path = directory_entry.path();
+        .par_bridge() // Convert the iterator to a parallel iterator
+        .fold(
+            || Vec::new(),
+            |mut acc, entry| {
+                match entry {
+                    Ok(entry) => {
+                        acc.push(entry.into_path());
+                    },
+                    _ => {}
+                }
+                acc
+            },
+        )
+        .reduce(
+            || Vec::new(),
+            |mut paths_a, paths_b| {
+                paths_a.extend(paths_b.into_iter());
+                paths_a
+            },
+        )
+}
+
+fn hash_paths(root: &str, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
+    let mut hashes: Vec<_> = paths.into_par_iter().map(|path| {
+        let mut hasher = blake3::Hasher::new();
         let relative_path = String::from(
             path.strip_prefix(&root).unwrap().to_str().unwrap()
         );
-        let absolute_path = String::from(
-            path.as_os_str().to_str().unwrap()
-        );
-        paths.push((relative_path, absolute_path, path.is_file()))
-    }
-    paths
-}
-
-fn hash_paths(paths: Vec<(String, String, bool)>) -> Vec<[u8; 32]> {
-    let mut hashes: Vec<_> = paths.into_par_iter().map(|(relative_path, absolute_path, is_file)| {
-        let mut hasher = blake3::Hasher::new();
         // hash paths for fs changes other than file content (must be relative to root)
         hasher.update(relative_path.as_bytes());
         // for files add hash of contents
-        if is_file {
+        if path.is_file() {
+            let absolute_path = String::from(
+                path.as_os_str().to_str().unwrap()
+            );
             let mut f = fs::File::open(absolute_path).unwrap();
             let mut buffer = [0; 4096];
             loop {
@@ -91,6 +104,6 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
 /// ```
 pub fn hash_source(source: &str, ignore_hidden: bool) -> ArrayString<64> {
     let paths = get_paths(source, ignore_hidden);
-    let hashes = hash_paths(paths);
+    let hashes = hash_paths(source, paths);
     get_hashes_root(hashes)
 }
