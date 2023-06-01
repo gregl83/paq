@@ -62,7 +62,7 @@ fn hash_paths(root: &str, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
                 path.as_os_str().to_str().unwrap()
             );
             let mut f = fs::File::open(absolute_path).unwrap();
-            let mut buffer = [0; 4096];
+            let mut buffer = [0; 32768];
             loop {
                 let n = f.read(&mut buffer[..]).unwrap();
                 if n == 0 {
