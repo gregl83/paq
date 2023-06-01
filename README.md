@@ -8,23 +8,37 @@ Hash file or directory (recursively).
 
 Powered by `blake3` cryptographic hashing algorithm.
 
-## Use CLI Command
+## Usage
+
+Install the command line interface executable or use the crate library.
+
+Included in this repository is an [example directory](./example) containing some sample files, subdirectory and a symlink to test `paq` functionality.
+
+### Executable
 
 Installation requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 Run `cargo install paq`.
 
-### Usage
+#### Invoke Command
 
 Run `paq [src]` to hash source file or directory. 
 
 For help, run `paq --help`.
 
-## Use Crate Library
+#### Hash Example Directory
+
+```paq ./example```
+
+Path to example directory can be relative or absolute.
+
+Expect different results if `-i` or `--ignore-hidden` flag argument is used.
+
+### Crate Library
 
 Add `paq` to project [dependencies](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-cratesio) in `Cargo.toml`.
 
-### Usage
+#### Use Library
 
 ```rust
 use paq;
@@ -35,6 +49,24 @@ let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
 
 println!("{}", source_hash);
 ```
+
+#### Hash Example Directory
+
+```rust
+
+use paq;
+
+let source = "example";
+
+let ignore_hidden = true;
+
+let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
+
+assert_eq!(&source_hash[..], "778c013fbdb4d129357ec8023ea1d147e60a014858cfc2dd998af6c946e802a9");
+
+```
+
+Expect different results if `ignore_hidden` is set to `false`.
 
 ## Content Limitations
 
@@ -57,34 +89,6 @@ Additionally, files or directory contents starting with dot or full stop *can* o
 2. Hash each file using the file's relative path and content as input to the hash function.
 3. Sort the list of file hashes.
 4. Calculate the final hash using the file hashes concatenated as input to the hash function.
-
-## Example Directory
-
-The `./example` directory contains some sample files, subdirectory and a symlink to test `paq` functionality.
-
-### Using CLI
-
-```paq ./example```
-
-Expect different results if `-i` flag argument is used.
-
-### Using Library
-
-```rust
-
-use paq;
-
-let source = "example";
-
-let ignore_hidden = true;
-
-let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
-
-assert_eq!(&source_hash[..], "778c013fbdb4d129357ec8023ea1d147e60a014858cfc2dd998af6c946e802a9");
-
-```
-
-Expect different results if `ignore_hidden` is set to `false`.
 
 ## License
 
