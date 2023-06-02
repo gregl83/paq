@@ -21,7 +21,7 @@ fn filter(ignore_hidden: bool) -> impl FnMut(&DirEntry) -> bool {
     }
 }
 
-fn get_paths(root: &str, ignore_hidden: bool) -> Vec<PathBuf> {
+fn get_paths(root: &PathBuf, ignore_hidden: bool) -> Vec<PathBuf> {
     WalkDir::new(root)
         .follow_links(false)
         .into_iter()
@@ -48,9 +48,9 @@ fn get_paths(root: &str, ignore_hidden: bool) -> Vec<PathBuf> {
         )
 }
 
-fn hash_paths(root: &str, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
+fn hash_paths(root: &PathBuf, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
     let mut hashes: Vec<_> = paths.into_par_iter().map(|path| {
-        let mut hasher = blake3::Hasher::new();
+        let mut hasher = Hasher::new();
         let relative_path = String::from(
             path.strip_prefix(&root).unwrap().to_str().unwrap()
         );
@@ -68,7 +68,7 @@ fn hash_paths(root: &str, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
                 if n == 0 {
                     break
                 }
-                hasher.update(buffer.as_slice());
+                hasher.update(&buffer[..n]);
             }
         }
         *hasher.finalize().as_bytes()
@@ -96,14 +96,14 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
 /// ```
 /// use paq;
 ///
-/// let source = "example";
+/// let source = std::path::PathBuf::from("example");
 /// let ignore_hidden = true;
-/// let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
+/// let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
 ///
-/// assert_eq!(&source_hash[..], "778c013fbdb4d129357ec8023ea1d147e60a014858cfc2dd998af6c946e802a9");
+/// assert_eq!(&source_hash[..], "494f366c528a930bb654b58721ab01683146381e1d2bf3e187311f9b725bfa19");
 /// ```
-pub fn hash_source(source: &str, ignore_hidden: bool) -> ArrayString<64> {
-    let paths = get_paths(source, ignore_hidden);
-    let hashes = hash_paths(source, paths);
+pub fn hash_source(source: &PathBuf, ignore_hidden: bool) -> ArrayString<64> {
+    let paths = get_paths(&source, ignore_hidden);
+    let hashes = hash_paths(&source, paths);
     get_hashes_root(hashes)
 }
