@@ -1,44 +1,71 @@
 [![Build Status](https://github.com/gregl83/paq/workflows/CI/badge.svg?branch=main)](https://github.com/gregl83/paq/actions?query=workflow%3ACI+branch%3Amain)
 [![Crates.io](https://img.shields.io/crates/v/paq.svg)](https://crates.io/crates/paq)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/gregl83/paq/blob/master/LICENSE)
-
 # paq
 
-paq files to hash.
-
-Hash file or directory (recursively).
-
-Version Control System agnostic.
+Hash file or directory recursively.
 
 Powered by `blake3` cryptographic hashing algorithm.
 
-## Install Command
+<p align="center">
+  <img src="paq.gif" alt="paq hashing demo" />
+</p>
 
-Requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+## Usage
+
+Install the command line interface executable or use the crate library.
+
+Included in this repository is an [example directory](./example) containing some sample files, a subdirectory and a symlink to test `paq` functionality.
+
+### Executable
+
+Installation requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 Run `cargo install paq`.
 
-### Usage
+#### Invoke Command
 
 Run `paq [src]` to hash source file or directory. 
 
 For help, run `paq --help`.
 
-## Use Crate
+#### Hash Example Directory
+
+```paq ./example```
+
+Path to example directory can be relative or absolute.
+
+Expect different results if `-i` or `--ignore-hidden` flag argument is used.
+
+### Crate Library
 
 Add `paq` to project [dependencies](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-cratesio) in `Cargo.toml`.
 
-### Usage
+#### Use Library
 
 ```rust
 use paq;
 
-let source = "/path/to/source";
+let source = std::path::PathBuf::from("/path/to/source");
 let ignore_hidden = true; // .dir or .file
-let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
+let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
 
 println!("{}", source_hash);
 ```
+
+#### Hash Example Directory
+
+```rust
+use paq;
+
+let source = std::path::PathBuf::from("example");
+let ignore_hidden = true;
+let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
+
+assert_eq!(&source_hash[..], "494f366c528a930bb654b58721ab01683146381e1d2bf3e187311f9b725bfa19");
+```
+
+Expect different results if `ignore_hidden` is set to `false`.
 
 ## Content Limitations
 
@@ -55,21 +82,12 @@ By design, `paq` does NOT include file system metadata in hash input such as:
 
 Additionally, files or directory contents starting with dot or full stop *can* optionally be ignored.
 
-## Example
+## How it Works
 
-The `./example` directory contains some sample files, subdirectory and a symlink to test `paq` functionality.
-
-```rust
-use paq;
-
-let source = "example";
-let ignore_hidden = true;
-let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
-
-assert_eq!(&source_hash[..], "778c013fbdb4d129357ec8023ea1d147e60a014858cfc2dd998af6c946e802a9");
-```
-
-Expect different results if `ignore_hidden` is set to `false`.
+1. Recursively get path(s) for a given source argument.
+2. Hash each path and file content if path is for a file.
+3. Sort the list of hashes to maintain consistent ordering.
+4. Compute the final hash by hashing the sorted list of hashes.
 
 ## License
 

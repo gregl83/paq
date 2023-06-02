@@ -3,10 +3,10 @@ name = "paq"
 version = "1.0.0"
 authors = ["Gregory Langlais <general@gregorylanglais.com>"]
 edition = "2021"
-description = "paq files to hash."
+description = "Hash file or directory recursively."
 license = "MIT"
 readme = "README.md"
-keywords = ["hash", "sha256", "merkle", "tree", "directories"]
+keywords = ["hash", "blake3", "directories", "files", "directory-traversal", "cryptographic"]
 repository = "https://github.com/gregl83/paq"
 homepage = "https://crates.io/crates/paq"
 
@@ -25,7 +25,7 @@ arrayvec = "0.7.2"
 walkdir = "2.3.2"
 blake3 = "1.3.1"
 rayon = "1.5"
-clap = "2.34.0"
+clap = { version = "4.3.0", features = ["cargo", "unstable-styles"] }
 
 [features]
 default = ["test-cleanup"]
