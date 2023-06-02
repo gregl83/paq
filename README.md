@@ -1,14 +1,15 @@
 [![Build Status](https://github.com/gregl83/paq/workflows/CI/badge.svg?branch=main)](https://github.com/gregl83/paq/actions?query=workflow%3ACI+branch%3Amain)
 [![Crates.io](https://img.shields.io/crates/v/paq.svg)](https://crates.io/crates/paq)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/gregl83/paq/blob/master/LICENSE)
-
 # paq
 
 Hash file or directory recursively.
 
 Powered by `blake3` cryptographic hashing algorithm.
 
-![paq demo](paq.gif)
+<p align="center">
+  <img src="paq.gif" alt="paq hashing demo" />
+</p>
 
 ## Usage
 
