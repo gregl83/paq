@@ -3,9 +3,6 @@
 extern crate test;
 use test::Bencher;
 
-use std::env;
-use std::path::PathBuf;
-
 mod utils;
 use utils::TempDir;
 
@@ -30,7 +27,7 @@ fn bench_hashes_directory_files(b: &mut Bencher) {
     dir.new_file(charlie_file_name, charlie_file_contents).unwrap();
     dir.new_file(one_file_name, one_file_contents).unwrap();
     dir.new_file(nine_file_name, nine_file_contents).unwrap();
-    let source = dir.path().as_os_str().to_str().unwrap();
+    let source = dir.path().canonicalize().unwrap();
 
-    b.iter(|| paq::hash_source(source, false));
+    b.iter(|| paq::hash_source(&source, false));
 }
