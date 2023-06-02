@@ -4,7 +4,7 @@
 
 # paq
 
-Hash file or directory (recursively).
+Hash file or directory recursively.
 
 Powered by `blake3` cryptographic hashing algorithm.
 
@@ -12,7 +12,7 @@ Powered by `blake3` cryptographic hashing algorithm.
 
 Install the command line interface executable or use the crate library.
 
-Included in this repository is an [example directory](./example) containing some sample files, subdirectory and a symlink to test `paq` functionality.
+Included in this repository is an [example directory](./example) containing some sample files, a subdirectory and a symlink to test `paq` functionality.
 
 ### Executable
 
@@ -43,9 +43,9 @@ Add `paq` to project [dependencies](https://doc.rust-lang.org/cargo/reference/sp
 ```rust
 use paq;
 
-let source = "/path/to/source";
+let source = std::path::PathBuf::from("/path/to/source");
 let ignore_hidden = true; // .dir or .file
-let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
+let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
 
 println!("{}", source_hash);
 ```
@@ -53,17 +53,13 @@ println!("{}", source_hash);
 #### Hash Example Directory
 
 ```rust
-
 use paq;
 
-let source = "example";
-
+let source = std::path::PathBuf::from("example");
 let ignore_hidden = true;
+let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
 
-let source_hash: paq::ArrayString<64> = paq::hash_source(source, ignore_hidden);
-
-assert_eq!(&source_hash[..], "778c013fbdb4d129357ec8023ea1d147e60a014858cfc2dd998af6c946e802a9");
-
+assert_eq!(&source_hash[..], "494f366c528a930bb654b58721ab01683146381e1d2bf3e187311f9b725bfa19");
 ```
 
 Expect different results if `ignore_hidden` is set to `false`.
@@ -85,10 +81,10 @@ Additionally, files or directory contents starting with dot or full stop *can* o
 
 ## How it Works
 
-1. Recursively get all files for a given source argument.
-2. Hash each file using the file's relative path and content as input to the hash function.
-3. Sort the list of file hashes.
-4. Calculate the final hash using the file hashes concatenated as input to the hash function.
+1. Recursively get path(s) for a given source argument.
+2. Hash each path and file content if path is for a file.
+3. Sort the list of hashes to maintain consistent ordering.
+4. Compute the final hash by hashing the sorted list of hashes.
 
 ## License
 

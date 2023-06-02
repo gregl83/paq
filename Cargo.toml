@@ -3,10 +3,10 @@ name = "paq"
 version = "1.0.0"
 authors = ["Gregory Langlais <general@gregorylanglais.com>"]
 edition = "2021"
-description = "Hash file or directory (recursively)."
+description = "Hash file or directory recursively."
 license = "MIT"
 readme = "README.md"
-keywords = ["hash", "sha256", "merkle", "tree", "directories"]
+keywords = ["hash", "blake3", "files", "directories"]
 repository = "https://github.com/gregl83/paq"
 homepage = "https://crates.io/crates/paq"
 
