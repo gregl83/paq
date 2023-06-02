@@ -8,6 +8,8 @@ Hash file or directory recursively.
 
 Powered by `blake3` cryptographic hashing algorithm.
 
+![paq demo](paq.gif)
+
 ## Usage
 
 Install the command line interface executable or use the crate library.
