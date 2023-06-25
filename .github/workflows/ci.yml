@@ -86,9 +86,10 @@ jobs:
       - name: Prepare Artifacts
         run: |
           source=${{ matrix.os }}-${{ matrix.architecture }}/${{ steps.vars.outputs.name }}${{ steps.vars.outputs.ext }}
-          target=bin/${{ steps.vars.outputs.name }}-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}${{ steps.vars.outputs.ext }}
-          mkdir bin
-          mv $source $target
+          binary=paq${{ steps.vars.outputs.ext }}
+          archive=${{ steps.vars.outputs.name }}-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}.zip
+          mv $source $binary
+          tar -zvcf $archive $binary
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -98,4 +99,4 @@ jobs:
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            bin/${{ steps.vars.outputs.name }}-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}${{ steps.vars.outputs.ext }}
+            ${{ steps.vars.outputs.name }}-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}${{ steps.vars.outputs.ext }}
