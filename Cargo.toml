@@ -18,6 +18,9 @@ path = "src/lib.rs"
 name = "paq"
 path = "src/bin.rs"
 
+[profile.release]
+strip = true
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
