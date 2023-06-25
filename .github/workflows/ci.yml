@@ -72,7 +72,7 @@ jobs:
       - name: Set Build File Variables
         id: vars
         run: |
-          name=$(grep -E '^name\s*=\s*".+"' Cargo.toml | awk -F '"' '{print $2}')
+          name=$(awk -F '= ' '/^\[package\]/{found=1} found && /^name/{gsub(/["]/, "", $2); print $2; exit}' Cargo.toml)
           echo "name=$name" >> $GITHUB_OUTPUT
           os="${{ matrix.os }}"
           os_sans_latest=$(echo "$os" | sed 's/-latest//')
