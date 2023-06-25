@@ -11,17 +11,27 @@ Powered by `blake3` cryptographic hashing algorithm.
   <img src="paq.gif" alt="paq hashing demo" />
 </p>
 
-## Usage
+## Installation
 
-Install the command line interface executable or use the crate library.
-
-Included in this repository is an [example directory](./example) containing some sample files, a subdirectory and a symlink to test `paq` functionality.
-
-### Executable
+### Cargo Install
 
 Installation requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
-Run `cargo install paq`.
+1. Clone this repository.
+2. Run `cargo install paq` from repository root.
+
+### Pre-Built Binary Package
+
+1. Find [Latest Release](https://github.com/gregl83/paq/releases) `.zip` archive for computer Operating System and Architecture.
+2. Downlaod and extract `.zip`.
+3. Modify permissions of the extracted `paq` binary to allow execution.
+4. Move `paq` to system path.
+
+## Usage
+
+Command Line Interface executable or Crate library.
+
+Included in this repository is an [example directory](./example) containing some sample files, a subdirectory and a symlink to test `paq` functionality.
 
 #### Invoke Command
 
@@ -31,7 +41,9 @@ For help, run `paq --help`.
 
 #### Hash Example Directory
 
-```paq ./example```
+```bash
+paq ./example
+```
 
 Path to example directory can be relative or absolute.
 
