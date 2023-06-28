@@ -28,7 +28,7 @@ Benchmarked using [hyperfine](https://github.com/sharkdp/hyperfine).
 Installation requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 1. Clone this repository.
-2. Run `cargo install paq` from repository root.
+2. Run `cargo install paq --path .` from repository root.
 
 ### Pre-Built Binary Package
 
