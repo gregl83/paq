@@ -11,6 +11,16 @@ Powered by `blake3` cryptographic hashing algorithm.
   <img src="paq.gif" alt="paq hashing demo" />
 </p>
 
+## Performance
+
+The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5772d0) programming language repository (~478M) was used as a test case.
+
+| Command | Mean [ms] | Min [ms] | Max [ms] |
+|:---|---:|---:|---:|
+| `paq ./go` | 176.4 ± 9.8 | 155.4 | 187.8 |
+
+Benchmarked using [hyperfine](https://github.com/sharkdp/hyperfine).
+
 ## Installation
 
 ### Cargo Install
@@ -23,7 +33,7 @@ Installation requires [cargo](https://doc.rust-lang.org/cargo/getting-started/in
 ### Pre-Built Binary Package
 
 1. Find [Latest Release](https://github.com/gregl83/paq/releases) `.zip` archive for computer Operating System and Architecture.
-2. Downlaod and extract `.zip`.
+2. Download and extract `.zip`.
 3. Modify permissions of the extracted `paq` binary to allow execution.
 4. Move `paq` to system path.
 
