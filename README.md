@@ -43,7 +43,7 @@ Command Line Interface executable or Crate library.
 
 Included in this repository is an [example directory](./example) containing some sample files, a subdirectory and a symlink to test `paq` functionality.
 
-#### Invoke Command
+### Executable
 
 Run `paq [src]` to hash source file or directory. 
 
