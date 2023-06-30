@@ -57,6 +57,7 @@ fn it_hashes_directory_from_any_path() {
     env::set_current_dir(original_path).unwrap();
 }
 
+#[cfg(target_os = "windows")]
 #[test]
 fn it_hashes_directory_symlink_without_following() {
     let expectation = "47e609d5f708cfef0ddcc7f8f0f6226b63c93e9a0478bdda672e334cc020c70e";
