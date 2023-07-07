@@ -51,24 +51,37 @@ fn get_paths(root: &PathBuf, ignore_hidden: bool) -> Vec<PathBuf> {
 fn hash_paths(root: &PathBuf, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
     let mut hashes: Vec<_> = paths.into_par_iter().map(|path| {
         let mut hasher = Hasher::new();
-        let relative_path = String::from(
-            path.strip_prefix(&root).unwrap().to_str().unwrap()
-        );
+        let source_path = path.strip_prefix(&root).unwrap().to_str().unwrap();
         // hash paths for fs changes other than file content (must be relative to root)
-        hasher.update(relative_path.as_bytes());
-        // for files add hash of contents
-        if path.is_file() {
-            let absolute_path = String::from(
-                path.as_os_str().to_str().unwrap()
-            );
-            let mut f = fs::File::open(absolute_path).unwrap();
+        #[cfg(target_family = "unix")]
+        {
+            hasher.update(source_path.as_bytes());
+        }
+        #[cfg(target_family = "windows")]
+        {
+            hasher.update(source_path.replace("\\", "/").as_bytes());
+        }
+        let relative_path = path.as_os_str().to_str().unwrap();
+        let metadata = fs::symlink_metadata(relative_path).unwrap();
+        if metadata.is_symlink() {
+            // for symlinks add hash of target path
+            let symlink_target = fs::read_link(relative_path).unwrap();
+            #[cfg(target_family = "unix")]
+            {
+                hasher.update(symlink_target.to_str().unwrap().as_bytes());
+            }
+            #[cfg(target_family = "windows")]
+            {
+                hasher.update(symlink_target.to_str().unwrap().replace("\\", "/").as_bytes());
+            }
+        } else if metadata.is_file() {
+            // for files add hash of contents
+            let mut file = fs::File::open(relative_path).unwrap();
             let mut buffer = [0; 32768];
             loop {
-                let n = f.read(&mut buffer[..]).unwrap();
-                if n == 0 {
-                    break
-                }
-                hasher.update(&buffer[..n]);
+                let buffer_size = file.read(&mut buffer[..]).unwrap();
+                if buffer_size == 0 { break }
+                hasher.update(&buffer[..buffer_size]);
             }
         }
         *hasher.finalize().as_bytes()
@@ -100,7 +113,7 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
 /// let ignore_hidden = true;
 /// let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
 ///
-/// assert_eq!(&source_hash[..], "494f366c528a930bb654b58721ab01683146381e1d2bf3e187311f9b725bfa19");
+/// assert_eq!(&source_hash[..], "a593d18de8b696c153df9079c662346fafbb555cc4b2bbf5c7e6747e23a24d74");
 /// ```
 pub fn hash_source(source: &PathBuf, ignore_hidden: bool) -> ArrayString<64> {
     let paths = get_paths(&source, ignore_hidden);

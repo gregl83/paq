@@ -57,9 +57,10 @@ fn it_hashes_directory_from_any_path() {
     env::set_current_dir(original_path).unwrap();
 }
 
+#[cfg(target_family = "unix")]
 #[test]
 fn it_hashes_directory_symlink_without_following() {
-    let expectation = "47e609d5f708cfef0ddcc7f8f0f6226b63c93e9a0478bdda672e334cc020c70e";
+    let expectation = "d7dea730e1745ec771eb89e94039fc91871b6dbf3509b46a2de083b2877a8330";
 
     let symlink_name = "symlink";
     let symlink_target = env::current_dir().unwrap();
