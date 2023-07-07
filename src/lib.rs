@@ -74,11 +74,6 @@ fn hash_paths(root: &PathBuf, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
             {
                 hasher.update(symlink_target.to_str().unwrap().replace("\\", "/").as_bytes());
             }
-            println!(
-                "PATH: {:?}  CONTENT: {:?}",
-                source_path,
-                symlink_target.to_str().unwrap().replace("\\", "/")
-            );
         } else if metadata.is_file() {
             // for files add hash of contents
             let mut file = fs::File::open(relative_path).unwrap();
@@ -86,11 +81,6 @@ fn hash_paths(root: &PathBuf, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
             loop {
                 let buffer_size = file.read(&mut buffer[..]).unwrap();
                 if buffer_size == 0 { break }
-                println!(
-                    "PATH: {:?}  CONTENT: {:?}",
-                    source_path.replace("\\", "/"),
-                    String::from_utf8(buffer[..buffer_size].to_vec()).unwrap()
-                );
                 hasher.update(&buffer[..buffer_size]);
             }
         }
