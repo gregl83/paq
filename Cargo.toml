@@ -1,6 +1,6 @@
 [package]
 name = "paq"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Gregory Langlais <general@gregorylanglais.com>"]
 edition = "2021"
 description = "Hash file or directory recursively."
