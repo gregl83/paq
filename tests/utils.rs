@@ -2,8 +2,6 @@ use std::env;
 use std::error;
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::symlink;
-#[cfg(target_family = "windows")]
-use std::os::windows::symlink_file;
 use std::fs::{self};
 use std::path::{Path, PathBuf};
 use std::result;
@@ -68,11 +66,6 @@ impl TempDir {
     pub fn new_symlink(&self, name: &str, target: PathBuf) -> Result<()> {
         let symlink_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
         Ok(symlink(target.as_os_str(), symlink_path.as_os_str()).expect("Unable to create symlink"))
-    }
-    #[cfg(target_family = "windows")]
-    pub fn new_symlink(&self, name: &str, target: PathBuf) -> Result<()> {
-        let symlink_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        Ok(symlink_file(target.as_os_str(), symlink_path.as_os_str()).expect("Unable to create symlink"))
     }
 
     /// Return the underlying path to this temporary directory.

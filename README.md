@@ -100,7 +100,7 @@ By design, `paq` does NOT include file system metadata in hash input such as:
 - File modification and access times
 - File ACLs and extended attributes
 - Hard links
-- Symlink target contents
+- Symlink target contents (target path is hashed)
 
 Additionally, files or directory contents starting with dot or full stop *can* optionally be ignored.
 
