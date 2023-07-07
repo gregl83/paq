@@ -66,7 +66,6 @@ fn hash_paths(root: &PathBuf, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
         if metadata.is_symlink() {
             // for symlinks add hash of target path
             let symlink_target = fs::read_link(relative_path).unwrap();
-            println!("SYM {:?}", symlink_target);
             #[cfg(target_family = "unix")]
             {
                 hasher.update(symlink_target.to_str().unwrap().as_bytes());
@@ -79,7 +78,6 @@ fn hash_paths(root: &PathBuf, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
             // for files add hash of contents
             let mut file = fs::File::open(relative_path).unwrap();
             let mut buffer = [0; 32768];
-            println!("FIL {:?}", relative_path);
             loop {
                 let buffer_size = file.read(&mut buffer[..]).unwrap();
                 if buffer_size == 0 { break }
