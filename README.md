@@ -13,11 +13,13 @@ Powered by `blake3` cryptographic hashing algorithm.
 
 ## Performance
 
-The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5772d0) programming language repository (~478M) was used as a test case.
+The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5772d0) programming language repository was used as a test case (478 MB / 12,540 Files).
 
-| Command | Mean [ms] | Min [ms] | Max [ms] |
-|:---|---:|---:|---:|
-| `paq ./go` | 176.4 ± 9.8 | 155.4 | 187.8 |
+| Command | Mean [ms] | Min [ms] | Max [ms] | Relative |
+|:---|---:|---:|---:|---:|
+| `paq ./go` | 127.8 ± 7.3 | 112.0 | 137.0 | 1.00 |
+| `find ./go -type f -print0 \| sort -z \| xargs -0 b3sum \| b3sum` | 172.8 ± 11.3 | 156.3 | 193.8 | 1.35 ± 0.12 |
+| `find ./go -type f -print0 \| sort -z \| xargs -0 sha256sum \| sha256sum` | 1610.7 ± 25.3 | 1571.4 | 1649.8 | 12.60 ± 0.74 |
 
 Benchmarked using [hyperfine](https://github.com/sharkdp/hyperfine).
 
@@ -84,7 +86,7 @@ let source = std::path::PathBuf::from("example");
 let ignore_hidden = true;
 let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
 
-assert_eq!(&source_hash[..], "494f366c528a930bb654b58721ab01683146381e1d2bf3e187311f9b725bfa19");
+assert_eq!(&source_hash[..], "a593d18de8b696c153df9079c662346fafbb555cc4b2bbf5c7e6747e23a24d74");
 ```
 
 Expect different results if `ignore_hidden` is set to `false`.
