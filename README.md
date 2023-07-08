@@ -13,21 +13,36 @@ Powered by `blake3` cryptographic hashing algorithm.
 
 ## Performance
 
-The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5772d0) programming language repository was used as a test case (478 MB / 12,540 Files).
+The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5772d0) programming language repository was used as a test case (478 MB / 12,540 files).
 
-| Command | Mean [ms] | Min [ms] | Max [ms] | Relative |
-|:---|---:|---:|---:|---:|
-| `paq ./go` | 127.8 ± 7.3 | 112.0 | 137.0 | 1.00 |
-| `find ./go -type f -print0 \| sort -z \| xargs -0 b3sum \| b3sum` | 172.8 ± 11.3 | 156.3 | 193.8 | 1.35 ± 0.12 |
-| `find ./go -type f -print0 \| sort -z \| xargs -0 sha256sum \| sha256sum` | 1610.7 ± 25.3 | 1571.4 | 1649.8 | 12.60 ± 0.74 |
+| Command                  | Mean [ms] | Min [ms] | Max [ms] | Relative |
+|:-------------------------|---:|---:|---:|---:|
+| `paq ./go`               | 116.4 ± 2.6 | 111.4 | 120.9 | 1.00 |
+| `shell b3sum`            | 132.4 ± 1.5 | 129.6 | 135.9 | 1.14 ± 0.03 |
+| `dirhash -a sha256 ./go` | 642.5 ± 5.8 | 634.7 | 649.8 | 5.52 ± 0.13 |
+| `shell sha256sum`        | 1583.0 ± 16.3 | 1568.6 | 1606.8 | 13.60 ± 0.33 |
 
-Benchmarked using [hyperfine](https://github.com/sharkdp/hyperfine).
+Performance [benchmark](hyperfine.sh) uses [hyperfine](https://github.com/sharkdp/hyperfine).
+
+Commands with `shell` use the following command with various `<hashsum>` implementations:
+
+```bash
+find ./go -type f -print0 | LC_ALL=C sort -z | xargs -0 <hashsum> | <hashsum>
+```
 
 ## Installation
 
 ### Cargo Install
 
 Installation requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+
+#### Install From Crates.io
+
+```bash
+cargo install paq
+```
+
+#### Install From Repository Clone
 
 1. Clone this repository.
 2. Run `cargo install --path .` from repository root.
