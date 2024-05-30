@@ -1,0 +1,32 @@
+settings:
+  title: paq demo
+  width: 90
+  height: 24
+  prompt: "\e[92m\e[1mubuntu\e[0m:\e[94m\e[1m/home/demo\e[0m$ "
+  environment:
+    - name: TERM
+      value: "xterm-256color"
+
+instructions:
+  - !Command
+    command: paq -h
+  - !Wait 5s
+  - !Command
+    command: paq ./example
+  - !Wait 2s
+  - !Command
+    command: cd ./example
+  - !Command
+    command: paq
+  - !Wait 2s
+  - !Command
+    command: cd ..
+  - !Command
+    command: paq --ignore-hidden ./example
+  - !Wait 2s
+  - !Command
+    command: paq --ignore-hidden -o ./example
+  - !Wait 1s
+  - !Command
+    command: cat example.paq; echo
+  - !Wait 3s

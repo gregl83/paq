@@ -61,6 +61,12 @@ impl TempDir {
         Ok(fs::write(file_path.as_os_str(), data).expect("Unable to write file"))
     }
 
+    /// Read a file in temporary directory.
+    pub fn read_file(&self, name: &str) -> Result<Vec<u8>> {
+        let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
+        Ok(fs::read(file_path.as_os_str()).expect("Unable to read file"))
+    }
+
     /// Create a new symlink in temporary directory to target.
     #[cfg(target_family = "unix")]
     pub fn new_symlink(&self, name: &str, target: PathBuf) -> Result<()> {

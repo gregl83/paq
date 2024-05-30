@@ -52,7 +52,7 @@ cargo install paq
 1. Find [Latest Release](https://github.com/gregl83/paq/releases) `.zip` archive for computer Operating System and Architecture.
 2. Download and extract `.zip`.
 3. Modify permissions of the extracted `paq` binary to allow execution.
-4. Move `paq` to system path.
+4. Move `paq` to a system path.
 
 ## Usage
 
@@ -63,6 +63,8 @@ Included in this repository is an [example directory](./example) containing some
 ### Executable
 
 Run `paq [src]` to hash source file or directory. 
+
+Output hash to `.paq` file as valid JSON.
 
 For help, run `paq --help`.
 
@@ -124,9 +126,9 @@ Additionally, files or directory contents starting with dot or full stop *can* o
 ## How it Works
 
 1. Recursively get path(s) for a given source argument.
-2. Hash each path and file content if path is for a file.
-3. Sort the list of hashes to maintain consistent ordering.
-4. Compute the final hash by hashing the sorted list of hashes.
+2. Hash each path and file contents if path is to a file.
+3. Sort the list of hashes for consistent ordering.
+4. Compute the final hash by hashing the list of hashes.
 
 ## License
 
