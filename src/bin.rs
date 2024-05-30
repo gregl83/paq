@@ -101,6 +101,7 @@ fn main() {
                 .default_missing_value(output_default)
                 .help(format!("Output hash (filesystem path) [default: {}]", output_default))
         )
+        .after_help("Fails if operating system denies read access to any source file.")
         .get_matches();
 
     let source = matches.get_one::<PathBuf>("src").unwrap();
