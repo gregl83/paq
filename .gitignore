@@ -11,3 +11,6 @@ Cargo.lock
 
 # IDE
 .idea
+
+# Build Files for paq.gif
+demo.cast
