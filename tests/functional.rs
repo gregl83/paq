@@ -220,8 +220,7 @@ mod bin {
         let mut cmd = Command::cargo_bin("paq").unwrap();
         let assert = cmd
             .arg(format!("{}", source.as_os_str().to_str().unwrap()))
-            .arg("-o")
-            .arg(output.as_os_str().to_str().unwrap())
+            .arg(format!("-o={}", output.as_os_str().to_str().unwrap()))
             .assert();
         assert
             .code(0)
@@ -273,8 +272,7 @@ mod bin {
         let mut cmd = Command::cargo_bin("paq").unwrap();
         let assert = cmd
             .arg(format!("{}", source.as_os_str().to_str().unwrap()))
-            .arg("--out")
-            .arg(output.as_os_str().to_str().unwrap())
+            .arg(format!("--out={}", output.as_os_str().to_str().unwrap()))
             .assert();
         assert
             .code(0)

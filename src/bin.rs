@@ -97,6 +97,7 @@ fn main() {
                 .short('o')
                 .long("out")
                 .value_parser(PathBufferValueParser{validate_exists: false})
+                .require_equals(true)
                 .num_args(0..=1)
                 .default_missing_value(output_default)
                 .help(format!("Output hash (filesystem path) [default: {}]", output_default))
