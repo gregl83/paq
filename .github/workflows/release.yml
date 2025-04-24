@@ -50,7 +50,7 @@ jobs:
           tool: cargo-llvm-cov
 
       - name: Generate Code Coverage Report
-        run: cargo llvm-cov --all-features --workspace --lcov --output-path ./target/lcov.info
+        run: cargo llvm-cov --all-features --workspace --fail-under-functions 80 --fail-under-lines 80 --fail-under-regions 80 --lcov --output-path ./target/lcov.info
 
       - name: Publish Coverage Report
         uses: codecov/codecov-action@v5
