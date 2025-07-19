@@ -45,9 +45,8 @@ impl TempDir {
             if iteration_path.is_dir() {
                 continue;
             }
-            fs::create_dir_all(&iteration_path).map_err(|e| {
-                err!("failed to create {}: {}", iteration_path.display(), e)
-            })?;
+            fs::create_dir_all(&iteration_path)
+                .map_err(|e| err!("failed to create {}: {}", iteration_path.display(), e))?;
             return Ok(TempDir(root_path, iteration_path));
         }
         Err(err!("failed to create temp dir after {} tries", TRIES))

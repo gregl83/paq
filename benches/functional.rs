@@ -24,7 +24,8 @@ fn bench_hashes_directory_files(b: &mut Bencher) {
     let dir = TempDir::new("bench_hashes_directory_files").unwrap();
     dir.new_file(alpha_file_name, alpha_file_contents).unwrap();
     dir.new_file(bravo_file_name, bravo_file_contents).unwrap();
-    dir.new_file(charlie_file_name, charlie_file_contents).unwrap();
+    dir.new_file(charlie_file_name, charlie_file_contents)
+        .unwrap();
     dir.new_file(one_file_name, one_file_contents).unwrap();
     dir.new_file(nine_file_name, nine_file_contents).unwrap();
     let source = dir.path().canonicalize().unwrap();

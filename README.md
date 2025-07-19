@@ -2,6 +2,7 @@
 [![Coverage Status](https://codecov.io/gh/gregl83/paq/graph/badge.svg?token=CL93O7DW9C)](https://codecov.io/gh/gregl83/paq)
 [![Crates.io](https://img.shields.io/crates/v/paq.svg)](https://crates.io/crates/paq)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/gregl83/paq/blob/master/LICENSE)
+
 # paq
 
 Hash file or directory recursively.
@@ -16,12 +17,12 @@ Powered by `blake3` cryptographic hashing algorithm.
 
 The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5772d0) programming language repository was used as a test case (478 MB / 12,540 files).
 
-| Command                  | Mean [ms] | Min [ms] | Max [ms] | Relative |
-|:-------------------------|---:|---:|---:|---:|
-| `paq ./go`               | 116.4 ± 2.6 | 111.4 | 120.9 | 1.00 |
-| `shell b3sum`            | 132.4 ± 1.5 | 129.6 | 135.9 | 1.14 ± 0.03 |
-| `dirhash -a sha256 ./go` | 642.5 ± 5.8 | 634.7 | 649.8 | 5.52 ± 0.13 |
-| `shell sha256sum`        | 1583.0 ± 16.3 | 1568.6 | 1606.8 | 13.60 ± 0.33 |
+| Command                  |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
+| :----------------------- | ------------: | -------: | -------: | -----------: |
+| `paq ./go`               |   116.4 ± 2.6 |    111.4 |    120.9 |         1.00 |
+| `shell b3sum`            |   132.4 ± 1.5 |    129.6 |    135.9 |  1.14 ± 0.03 |
+| `dirhash -a sha256 ./go` |   642.5 ± 5.8 |    634.7 |    649.8 |  5.52 ± 0.13 |
+| `shell sha256sum`        | 1583.0 ± 16.3 |   1568.6 |   1606.8 | 13.60 ± 0.33 |
 
 Performance [benchmark](hyperfine.sh) uses [hyperfine](https://github.com/sharkdp/hyperfine).
 
@@ -73,7 +74,7 @@ Included in this repository is an [example directory](./example) containing some
 
 ### Executable
 
-Run `paq [src]` to hash source file or directory. 
+Run `paq [src]` to hash source file or directory.
 
 Output hash to `.paq` file as valid JSON.
 
@@ -132,7 +133,7 @@ By design, `paq` does NOT include file system metadata in hash input such as:
 - Hard links
 - Symlink target contents (target path is hashed)
 
-Additionally, files or directory contents starting with dot or full stop *can* optionally be ignored.
+Additionally, files or directory contents starting with dot or full stop _can_ optionally be ignored.
 
 ## How it Works
 

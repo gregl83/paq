@@ -1,9 +1,9 @@
 mod utils;
 
 mod lib {
+    use crate::utils::TempDir;
     use std::env;
     use std::path::PathBuf;
-    use crate::utils::TempDir;
 
     #[test]
     fn it_hashes_single_file() {
@@ -110,8 +110,10 @@ mod lib {
 
     #[test]
     fn it_hashes_directory_with_ignored_file() {
-        let expectation_not_ignored = "e383192a5ef45576817b4222e455e3d538ae3bab279a62c0a8b67279ad007072";
-        let expectation_ignored = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+        let expectation_not_ignored =
+            "e383192a5ef45576817b4222e455e3d538ae3bab279a62c0a8b67279ad007072";
+        let expectation_ignored =
+            "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
 
         let file_name = ".ignored";
         let file_contents = ".ignored-body".as_bytes();
@@ -127,8 +129,10 @@ mod lib {
 
     #[test]
     fn it_hashes_directory_with_ignored_subdirectory() {
-        let expectation_not_ignored = "f38a56a87aca98131b2fa5914fd13bc11f5823602293e8d84b5c69000b33ebf2";
-        let expectation_ignored = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+        let expectation_not_ignored =
+            "f38a56a87aca98131b2fa5914fd13bc11f5823602293e8d84b5c69000b33ebf2";
+        let expectation_ignored =
+            "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
 
         let dir = TempDir::new("it_hashes_directory_with_ignored_subdirectory").unwrap();
         let source = dir.path().canonicalize().unwrap();
@@ -139,7 +143,10 @@ mod lib {
         let hash_not_ignored = paq::hash_source(&source, false);
         assert_eq!(&hash_not_ignored[..], expectation_not_ignored);
 
-        println!("prevent early subdir drop for: {}", subdir.path().as_os_str().to_str().unwrap())
+        println!(
+            "prevent early subdir drop for: {}",
+            subdir.path().as_os_str().to_str().unwrap()
+        )
     }
 
     #[test]
@@ -160,7 +167,8 @@ mod lib {
         let dir = TempDir::new("it_hashes_directory_files_consistently").unwrap();
         dir.new_file(alpha_file_name, alpha_file_contents).unwrap();
         dir.new_file(bravo_file_name, bravo_file_contents).unwrap();
-        dir.new_file(charlie_file_name, charlie_file_contents).unwrap();
+        dir.new_file(charlie_file_name, charlie_file_contents)
+            .unwrap();
         dir.new_file(one_file_name, one_file_contents).unwrap();
         dir.new_file(nine_file_name, nine_file_contents).unwrap();
         let source = dir.path().canonicalize().unwrap();
@@ -175,9 +183,9 @@ mod lib {
 }
 
 mod bin {
-    use std::path::PathBuf;
-    use assert_cmd::Command;
     use crate::utils::TempDir;
+    use assert_cmd::Command;
+    use std::path::PathBuf;
 
     #[test]
     fn it_outputs_file_hash_using_default_short_arg() {
@@ -201,7 +209,10 @@ mod bin {
             .success();
 
         let file_hash = dir.read_file(hash_file_name).unwrap();
-        assert_eq!(file_hash.as_slice(), format!("\"{}\"", expectation).as_bytes());
+        assert_eq!(
+            file_hash.as_slice(),
+            format!("\"{}\"", expectation).as_bytes()
+        );
     }
 
     #[test]
@@ -228,7 +239,10 @@ mod bin {
             .success();
 
         let file_hash = dir.read_file(hash_file_name).unwrap();
-        assert_eq!(file_hash.as_slice(), format!("\"{}\"", expectation).as_bytes());
+        assert_eq!(
+            file_hash.as_slice(),
+            format!("\"{}\"", expectation).as_bytes()
+        );
     }
 
     #[test]
@@ -253,7 +267,10 @@ mod bin {
             .success();
 
         let file_hash = dir.read_file(hash_file_name).unwrap();
-        assert_eq!(file_hash.as_slice(), format!("\"{}\"", expectation).as_bytes());
+        assert_eq!(
+            file_hash.as_slice(),
+            format!("\"{}\"", expectation).as_bytes()
+        );
     }
 
     #[test]
@@ -280,6 +297,9 @@ mod bin {
             .success();
 
         let file_hash = dir.read_file(hash_file_name).unwrap();
-        assert_eq!(file_hash.as_slice(), format!("\"{}\"", expectation).as_bytes());
+        assert_eq!(
+            file_hash.as_slice(),
+            format!("\"{}\"", expectation).as_bytes()
+        );
     }
 }
