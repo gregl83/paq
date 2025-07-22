@@ -23,12 +23,12 @@ macro_rules! err {
 /// We use this in lieu of tempfile because tempfile brings in too many
 /// dependencies.
 #[derive(Debug)]
-pub struct TempDir(PathBuf, PathBuf);
+pub struct TempDir(PathBuf);
 
 #[cfg(feature = "test-cleanup")]
 impl Drop for TempDir {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.1).unwrap();
+        fs::remove_dir_all(&self.0).unwrap();
     }
 }
 
@@ -47,7 +47,7 @@ impl TempDir {
             }
             fs::create_dir_all(&iteration_path)
                 .map_err(|e| err!("failed to create {}: {}", iteration_path.display(), e))?;
-            return Ok(TempDir(root_path, iteration_path));
+            return Ok(TempDir(iteration_path));
         }
         Err(err!("failed to create temp dir after {} tries", TRIES))
     }
@@ -61,6 +61,6 @@ impl TempDir {
 
     /// Return the underlying path to this temporary directory.
     pub fn path(&self) -> &Path {
-        &self.1
+        &self.0
     }
 }
