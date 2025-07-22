@@ -200,18 +200,18 @@ mod bin {
 
         let mut cmd = Command::cargo_bin("paq").unwrap();
         let assert = cmd
-            .arg(format!("{}", source.as_os_str().to_str().unwrap()))
+            .arg(source.as_os_str().to_str().unwrap().to_string())
             .arg("-o")
             .assert();
         assert
             .code(0)
-            .stdout(format!("{}\n", expectation))
+            .stdout(format!("{expectation}\n"))
             .success();
 
         let file_hash = dir.read_file(hash_file_name).unwrap();
         assert_eq!(
             file_hash.as_slice(),
-            format!("\"{}\"", expectation).as_bytes()
+            format!("\"{expectation}\"").as_bytes()
         );
     }
 
@@ -230,18 +230,18 @@ mod bin {
 
         let mut cmd = Command::cargo_bin("paq").unwrap();
         let assert = cmd
-            .arg(format!("{}", source.as_os_str().to_str().unwrap()))
+            .arg(source.as_os_str().to_str().unwrap().to_string())
             .arg(format!("-o={}", output.as_os_str().to_str().unwrap()))
             .assert();
         assert
             .code(0)
-            .stdout(format!("{}\n", expectation))
+            .stdout(format!("{expectation}\n"))
             .success();
 
         let file_hash = dir.read_file(hash_file_name).unwrap();
         assert_eq!(
             file_hash.as_slice(),
-            format!("\"{}\"", expectation).as_bytes()
+            format!("\"{expectation}\"").as_bytes()
         );
     }
 
@@ -258,18 +258,18 @@ mod bin {
 
         let mut cmd = Command::cargo_bin("paq").unwrap();
         let assert = cmd
-            .arg(format!("{}", source.as_os_str().to_str().unwrap()))
+            .arg(source.as_os_str().to_str().unwrap().to_string())
             .arg("--out")
             .assert();
         assert
             .code(0)
-            .stdout(format!("{}\n", expectation))
+            .stdout(format!("{expectation}\n"))
             .success();
 
         let file_hash = dir.read_file(hash_file_name).unwrap();
         assert_eq!(
             file_hash.as_slice(),
-            format!("\"{}\"", expectation).as_bytes()
+            format!("\"{expectation}\"").as_bytes()
         );
     }
 
@@ -288,18 +288,18 @@ mod bin {
 
         let mut cmd = Command::cargo_bin("paq").unwrap();
         let assert = cmd
-            .arg(format!("{}", source.as_os_str().to_str().unwrap()))
+            .arg(source.as_os_str().to_str().unwrap().to_string())
             .arg(format!("--out={}", output.as_os_str().to_str().unwrap()))
             .assert();
         assert
             .code(0)
-            .stdout(format!("{}\n", expectation))
+            .stdout(format!("{expectation}\n"))
             .success();
 
         let file_hash = dir.read_file(hash_file_name).unwrap();
         assert_eq!(
             file_hash.as_slice(),
-            format!("\"{}\"", expectation).as_bytes()
+            format!("\"{expectation}\"").as_bytes()
         );
     }
 }

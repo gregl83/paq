@@ -57,7 +57,8 @@ impl TempDir {
     /// Create a new file in temporary directory using data of byte array.
     pub fn new_file(&self, name: &str, data: &[u8]) -> Result<()> {
         let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        Ok(fs::write(file_path.as_os_str(), data).expect("Unable to write file"))
+        fs::write(file_path.as_os_str(), data).expect("Unable to write file");
+        Ok(())
     }
 
     /// Read a file in temporary directory.
@@ -70,9 +71,10 @@ impl TempDir {
     #[cfg(target_family = "unix")]
     pub fn new_symlink(&self, name: &str, target: PathBuf) -> Result<()> {
         let symlink_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
+        symlink(target.as_os_str(), symlink_path.as_os_str())
+        .expect("Unable to create symlink");
         Ok(
-            symlink(target.as_os_str(), symlink_path.as_os_str())
-                .expect("Unable to create symlink"),
+            (),
         )
     }
 

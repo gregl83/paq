@@ -29,21 +29,18 @@ fn get_paths(root: &PathBuf, ignore_hidden: bool) -> Vec<PathBuf> {
         .filter_entry(filter(ignore_hidden))
         .par_bridge() // Convert the iterator to a parallel iterator
         .fold(
-            || Vec::new(),
+            Vec::new,
             |mut acc, entry| {
-                match entry {
-                    Ok(entry) => {
-                        acc.push(entry.into_path());
-                    }
-                    _ => {}
+                if let Ok(entry) = entry {
+                    acc.push(entry.into_path());
                 }
                 acc
             },
         )
         .reduce(
-            || Vec::new(),
+            Vec::new,
             |mut paths_a, paths_b| {
-                paths_a.extend(paths_b.into_iter());
+                paths_a.extend(paths_b);
                 paths_a
             },
         )
@@ -54,7 +51,7 @@ fn hash_paths(root: &PathBuf, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
         .into_par_iter()
         .map(|path| {
             let mut hasher = Hasher::new();
-            let source_path = path.strip_prefix(&root).unwrap().to_str().unwrap();
+            let source_path = path.strip_prefix(root).unwrap().to_str().unwrap();
             // hash paths for fs changes other than file content (must be relative to root)
             #[cfg(target_family = "unix")]
             {

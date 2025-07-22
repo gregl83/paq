@@ -54,13 +54,13 @@ fn derive_output_filepath(source: &PathBuf) -> PathBuf {
     let source_canonical = source.canonicalize().unwrap();
     let source_filename = source_canonical.file_name().unwrap().to_str().unwrap();
     let mut path_buffer = PathBuf::from(source_canonical.parent().unwrap());
-    path_buffer.push(format!("{}.paq", source_filename));
+    path_buffer.push(format!("{source_filename}.paq"));
     path_buffer
 }
 
 fn write_hashfile(filepath: &PathBuf, hash: &str) -> Result<(), Error> {
     let mut file = File::create(filepath).unwrap();
-    file.write_all(format!("\"{}\"", hash).as_bytes())
+    file.write_all(format!("\"{hash}\"").as_bytes())
 }
 
 fn main() {
@@ -95,8 +95,7 @@ fn main() {
                 .num_args(0..=1)
                 .default_missing_value(output_default)
                 .help(format!(
-                    "Output hash (filesystem path) [default: {}]",
-                    output_default
+                    "Output hash (filesystem path) [default: {output_default}]"
                 )),
         )
         .after_help("Fails if operating system denies read access to any source file.")
@@ -105,7 +104,7 @@ fn main() {
     let source = matches.get_one::<PathBuf>("src").unwrap();
     let ignore_hidden = matches.get_flag("ignore-hidden");
     let output: Option<&PathBuf> = matches.get_one::<PathBuf>("filepath");
-    let hash = hash_source(&source, ignore_hidden);
+    let hash = hash_source(source, ignore_hidden);
 
     if let Some(filepath) = output {
         let output_filepath = match filepath.to_str().unwrap() {
@@ -115,5 +114,5 @@ fn main() {
         write_hashfile(&output_filepath, hash.as_str()).unwrap();
     }
 
-    println!("{}", hash);
+    println!("{hash}");
 }

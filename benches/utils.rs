@@ -55,7 +55,8 @@ impl TempDir {
     /// Create a new file in temporary directory using data of byte array.
     pub fn new_file(&self, name: &str, data: &[u8]) -> Result<()> {
         let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        Ok(fs::write(file_path.as_os_str(), data).expect("Unable to write file"))
+        fs::write(file_path.as_os_str(), data).expect("Unable to write file");
+        Ok(())
     }
 
     /// Return the underlying path to this temporary directory.
