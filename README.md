@@ -48,6 +48,16 @@ cargo install paq
 1. Clone this repository.
 2. Run `cargo install --path .` from repository root.
 
+### Nix
+
+This repository uses [Nix flakes](https://wiki.nixos.org/wiki/Flakes).
+It exposes `paq` as both its default package and app.
+To run the app directly:
+
+```bash
+nix run -- github:gregl83/paq --help
+```
+
 ### Pre-Built Binary Package
 
 1. Find [Latest Release](https://github.com/gregl83/paq/releases) `.zip` archive for computer Operating System and Architecture.
