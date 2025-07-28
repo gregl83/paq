@@ -10,9 +10,17 @@ use clap::{
     error::ContextValue, error::ErrorKind, Arg, ArgAction, Command,
 };
 use paq::hash_source;
-use std::fs::File;
-use std::io::{Error, Write};
-use std::path::PathBuf;
+use std::{
+    fs::File,
+    io::{
+        Error,
+        Write,
+    },
+    path::{
+        Path,
+        PathBuf,
+    }
+};
 
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
@@ -50,7 +58,7 @@ impl TypedValueParser for PathBufferValueParser {
     }
 }
 
-fn derive_output_filepath(source: &PathBuf) -> PathBuf {
+fn derive_output_filepath(source: &Path) -> PathBuf {
     let source_canonical = source.canonicalize().unwrap();
     let source_filename = source_canonical.file_name().unwrap().to_str().unwrap();
     let mut path_buffer = PathBuf::from(source_canonical.parent().unwrap());

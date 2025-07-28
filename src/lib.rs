@@ -122,7 +122,7 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
 /// let ignore_hidden = true;
 /// let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
 ///
-/// assert_eq!(&source_hash[..], "a593d18de8b696c153df9079c662346fafbb555cc4b2bbf5c7e6747e23a24d74");
+/// assert_eq!(&source_hash[..], "d7d25c9b2fdb7391e650085a985ad0d892c7f0dd5edd32c7ccdb4b0d1c34c430");
 /// ```
 pub fn hash_source(source: &PathBuf, ignore_hidden: bool) -> ArrayString<64> {
     let paths = get_paths(source, ignore_hidden);
