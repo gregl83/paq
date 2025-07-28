@@ -55,7 +55,7 @@ Installation requires [nix](https://nix.dev/) and `nix-command` [experimental fe
 
 ```bash
 nix profile add github:gregl83/paq
-````
+```
 
 ### Pre-Built Binary Package
 
