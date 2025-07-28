@@ -3,7 +3,7 @@ name: release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 env:
   CARGO_TERM_COLOR: always
@@ -91,9 +91,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
-        architecture: [ x64, x86 ]
-        toolchain: [ stable ]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        architecture: [x64, x86]
+        toolchain: [stable]
     permissions:
       contents: write
     steps:

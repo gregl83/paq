@@ -1,8 +1,8 @@
 use std::env;
 use std::error;
+use std::fs::{self};
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::symlink;
-use std::fs::{self};
 use std::path::{Path, PathBuf};
 use std::result;
 
@@ -25,12 +25,12 @@ macro_rules! err {
 /// We use this in lieu of tempfile because tempfile brings in too many
 /// dependencies.
 #[derive(Debug)]
-pub struct TempDir(PathBuf, PathBuf);
+pub struct TempDir(PathBuf);
 
 #[cfg(feature = "test-cleanup")]
 impl Drop for TempDir {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.1).unwrap();
+        fs::remove_dir_all(&self.0).unwrap();
     }
 }
 
@@ -47,10 +47,9 @@ impl TempDir {
             if iteration_path.is_dir() {
                 continue;
             }
-            fs::create_dir_all(&iteration_path).map_err(|e| {
-                err!("failed to create {}: {}", iteration_path.display(), e)
-            })?;
-            return Ok(TempDir(root_path, iteration_path));
+            fs::create_dir_all(&iteration_path)
+                .map_err(|e| err!("failed to create {}: {}", iteration_path.display(), e))?;
+            return Ok(TempDir(iteration_path));
         }
         Err(err!("failed to create temp dir after {} tries", TRIES))
     }
@@ -58,7 +57,8 @@ impl TempDir {
     /// Create a new file in temporary directory using data of byte array.
     pub fn new_file(&self, name: &str, data: &[u8]) -> Result<()> {
         let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        Ok(fs::write(file_path.as_os_str(), data).expect("Unable to write file"))
+        fs::write(file_path.as_os_str(), data).expect("Unable to write file");
+        Ok(())
     }
 
     /// Read a file in temporary directory.
@@ -71,11 +71,15 @@ impl TempDir {
     #[cfg(target_family = "unix")]
     pub fn new_symlink(&self, name: &str, target: PathBuf) -> Result<()> {
         let symlink_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        Ok(symlink(target.as_os_str(), symlink_path.as_os_str()).expect("Unable to create symlink"))
+        symlink(target.as_os_str(), symlink_path.as_os_str())
+        .expect("Unable to create symlink");
+        Ok(
+            (),
+        )
     }
 
     /// Return the underlying path to this temporary directory.
     pub fn path(&self) -> &Path {
-        &self.1
+        &self.0
     }
 }
