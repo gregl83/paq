@@ -51,7 +51,7 @@ cargo install paq
 
 ### Nix Flakes
 
-Installation requires [nix](https://nix.dev/) and `nix-command` [experimental feature](https://nixos.wiki/wiki/Flakes#Enable_flakes_temporarily) to be enabled.
+Installation requires [nix](https://nix.dev/) and the `nix-command` [experimental feature](https://nixos.wiki/wiki/Flakes#Enable_flakes_temporarily) to be enabled.
 
 ```bash
 nix profile add github:gregl83/paq
