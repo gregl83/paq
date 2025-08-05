@@ -44,7 +44,9 @@ Installation requires [cargo](https://doc.rust-lang.org/cargo/getting-started/in
 cargo install paq
 ```
 
-#### Install From Repository Clone
+#### Install From Repository Clone (Unstable)
+
+Not recommended due to instability of `main` branch in-between releases.
 
 1. Clone this repository.
 2. Run `cargo install --path .` from repository root.
