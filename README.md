@@ -17,12 +17,17 @@ Powered by `blake3` cryptographic hashing algorithm.
 
 The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5772d0) programming language repository was used as a test case (478 MB / 12,540 files).
 
-| Command                  |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
-| :----------------------- | ------------: | -------: | -------: | -----------: |
-| `paq ./go`               |   116.4 ± 2.6 |    111.4 |    120.9 |         1.00 |
-| `shell b3sum`            |   132.4 ± 1.5 |    129.6 |    135.9 |  1.14 ± 0.03 |
-| `dirhash -a sha256 ./go` |   642.5 ± 5.8 |    634.7 |    649.8 |  5.52 ± 0.13 |
-| `shell sha256sum`        | 1583.0 ± 16.3 |   1568.6 |   1606.8 | 13.60 ± 0.33 |
+| Tool               | Command                  |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
+| :----------------- | :----------------------- | ------------: | -------: | -------: | -----------: |
+| [paq][paq]         | `paq ./go`               |   116.4 ± 2.6 |    111.4 |    120.9 |         1.00 |
+| [b3sum][b3sum]     | `shell b3sum`            |   132.4 ± 1.5 |    129.6 |    135.9 |  1.14 ± 0.03 |
+| [dirhash][dirhash] | `dirhash -a sha256 ./go` |   642.5 ± 5.8 |    634.7 |    649.8 |  5.52 ± 0.13 |
+| [GNU sha2][gnusha] | `shell sha256sum`        | 1583.0 ± 16.3 |   1568.6 |   1606.8 | 13.60 ± 0.33 |
+
+[paq]: https://github.com/gregl83/paq
+[b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
+[dirhash]: https://github.com/idrassi/DirHash
+[gnusha]: https://www.gnu.org/software/coreutils/manual/html_node/sha2-utilities.html
 
 Performance [benchmark](hyperfine.sh) uses [hyperfine](https://github.com/sharkdp/hyperfine).
 
