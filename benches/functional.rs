@@ -7,6 +7,101 @@ mod utils;
 use utils::TempDir;
 
 #[bench]
+fn bench_blake3_final_hash_iterate_updates(b: &mut Bencher) {
+    let file_hashes: Vec<[u8; 32]> = (0..1000)
+        .map(|i| {
+            blake3::hash(
+                format!("test_file_{i}").as_bytes()
+            ).as_bytes().to_owned()
+        })
+        .collect();
+
+    b.iter(move || {
+        let mut hasher = blake3::Hasher::new();
+
+        for file_hash in &file_hashes {
+            hasher.update(file_hash);
+        }
+
+        hasher.finalize().to_hex()
+    });
+}
+
+#[bench]
+fn bench_blake3_final_hash_array_flatten(b: &mut Bencher) {
+    let file_hashes: Vec<[u8; 32]> = (0..1000)
+        .map(|i| {
+            blake3::hash(
+                format!("test_file_{i}").as_bytes()
+            ).as_bytes().to_owned()
+        })
+        .collect();
+
+    b.iter(move || {
+        let flat_bytes: Vec<u8> = file_hashes
+            .iter()
+            .flat_map(|arr| arr.iter())
+            .copied()
+            .collect();
+        blake3::hash(&flat_bytes).to_hex()
+    });
+}
+
+#[bench]
+fn bench_blake3_final_hash_flat_bytes(b: &mut Bencher) {
+    let file_hashes: Vec<[u8; 32]> = (0..1000)
+        .map(|i| {
+            blake3::hash(
+                format!("test_file_{i}").as_bytes()
+            ).as_bytes().to_owned()
+        })
+        .collect();
+
+    b.iter(move || {
+        let mut flat_bytes = Vec::with_capacity(file_hashes.len() * 32);
+        for file_hash in &file_hashes {
+            flat_bytes.extend_from_slice(file_hash);
+        }
+        blake3::hash(&flat_bytes).to_hex()
+    });
+}
+
+#[bench]
+fn bench_blake3_final_hash_unsafe_slice(b: &mut Bencher) {
+    let file_hashes: Vec<[u8; 32]> = (0..1000)
+        .map(|i| {
+            blake3::hash(
+                format!("test_file_{i}").as_bytes()
+            ).as_bytes().to_owned()
+        })
+        .collect();
+
+    b.iter(move || {
+        if file_hashes.is_empty() {
+            return blake3::hash(&[]).to_hex();
+        }
+
+        let byte_len = match file_hashes.len().checked_mul(32) {
+            Some(len) => len,
+            None => {
+                // Fallback for huge vectors
+                let mut flat_bytes = Vec::with_capacity(file_hashes.len() * 32);
+                for file_hash in &file_hashes {
+                    flat_bytes.extend_from_slice(file_hash);
+                }
+                return blake3::hash(&flat_bytes).to_hex();
+            }
+        };
+
+        unsafe {
+            let ptr = file_hashes.as_ptr() as *const u8;
+            let slice = std::slice::from_raw_parts(ptr, byte_len);
+            blake3::hash(slice).to_hex()
+        }
+    });
+}
+
+#[bench]
 fn bench_hashes_directory_files(b: &mut Bencher) {
     // NOTE - implementation of parallelism increased thread allocation overhead (small dirs increase)
 

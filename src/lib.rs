@@ -100,13 +100,13 @@ fn hash_paths(root: &PathBuf, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
 }
 
 fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
-    let mut hasher = Hasher::new();
+    let mut flattened_bytes = Vec::with_capacity(file_hashes.len() * 32);
 
-    for file_hash in file_hashes {
-        hasher.update(file_hash.as_slice());
+    for file_hash in &file_hashes {
+        flattened_bytes.extend_from_slice(file_hash);
     }
 
-    hasher.finalize().to_hex()
+    blake3::hash(&flattened_bytes).to_hex()
 }
 
 /// Hash file system source.
