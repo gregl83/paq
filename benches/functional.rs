@@ -11,7 +11,7 @@ fn bench_blake3_final_hash_iterate_updates(b: &mut Bencher) {
     let file_hashes: Vec<[u8; 32]> = (0..1000)
         .map(|i| {
             blake3::hash(
-                format!("test_file_{}", i).as_bytes()
+                format!("test_file_{i}").as_bytes()
             ).as_bytes().to_owned()
         })
         .collect();
@@ -23,7 +23,7 @@ fn bench_blake3_final_hash_iterate_updates(b: &mut Bencher) {
             hasher.update(file_hash);
         }
 
-        return hasher.finalize().to_hex();
+        hasher.finalize().to_hex()
     });
 }
 
@@ -32,7 +32,7 @@ fn bench_blake3_final_hash_array_flatten(b: &mut Bencher) {
     let file_hashes: Vec<[u8; 32]> = (0..1000)
         .map(|i| {
             blake3::hash(
-                format!("test_file_{}", i).as_bytes()
+                format!("test_file_{i}").as_bytes()
             ).as_bytes().to_owned()
         })
         .collect();
@@ -43,7 +43,7 @@ fn bench_blake3_final_hash_array_flatten(b: &mut Bencher) {
             .flat_map(|arr| arr.iter())
             .copied()
             .collect();
-        return blake3::hash(&flat_bytes).to_hex();
+        blake3::hash(&flat_bytes).to_hex()
     });
 }
 
@@ -52,7 +52,7 @@ fn bench_blake3_final_hash_flat_bytes(b: &mut Bencher) {
     let file_hashes: Vec<[u8; 32]> = (0..1000)
         .map(|i| {
             blake3::hash(
-                format!("test_file_{}", i).as_bytes()
+                format!("test_file_{i}").as_bytes()
             ).as_bytes().to_owned()
         })
         .collect();
@@ -62,7 +62,7 @@ fn bench_blake3_final_hash_flat_bytes(b: &mut Bencher) {
         for file_hash in &file_hashes {
             flat_bytes.extend_from_slice(file_hash);
         }
-        return blake3::hash(&flat_bytes).to_hex();
+        blake3::hash(&flat_bytes).to_hex()
     });
 }
 
@@ -71,7 +71,7 @@ fn bench_blake3_final_hash_unsafe_slice(b: &mut Bencher) {
     let file_hashes: Vec<[u8; 32]> = (0..1000)
         .map(|i| {
             blake3::hash(
-                format!("test_file_{}", i).as_bytes()
+                format!("test_file_{i}").as_bytes()
             ).as_bytes().to_owned()
         })
         .collect();
@@ -96,7 +96,7 @@ fn bench_blake3_final_hash_unsafe_slice(b: &mut Bencher) {
         unsafe {
             let ptr = file_hashes.as_ptr() as *const u8;
             let slice = std::slice::from_raw_parts(ptr, byte_len);
-            return blake3::hash(slice).to_hex();
+            blake3::hash(slice).to_hex()
         }
     });
 }
