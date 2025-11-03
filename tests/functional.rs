@@ -182,9 +182,14 @@ mod lib {
     }
 }
 
+// added allow deprecated attribute due to cargo_bin notice without a resolution
+#[allow(deprecated)]
 mod bin {
     use crate::utils::TempDir;
-    use assert_cmd::Command;
+    use assert_cmd::{
+        cargo::cargo_bin,
+        Command,
+    };
     use std::path::PathBuf;
 
     #[test]
@@ -198,7 +203,7 @@ mod bin {
         dir.new_file(file_name, file_contents).unwrap();
         let source = dir.path().join(file_name);
 
-        let mut cmd = Command::cargo_bin("paq").unwrap();
+        let mut cmd = Command::new(cargo_bin!("paq"));
         let assert = cmd
             .arg(source.as_os_str().to_str().unwrap())
             .arg("-o")
@@ -228,7 +233,7 @@ mod bin {
         let mut output = PathBuf::from(&source).parent().unwrap().to_path_buf();
         output.push(hash_file_name);
 
-        let mut cmd = Command::cargo_bin("paq").unwrap();
+        let mut cmd = Command::new(cargo_bin!("paq"));
         let assert = cmd
             .arg(source.as_os_str().to_str().unwrap())
             .arg(format!("-o={}", output.as_os_str().to_str().unwrap()))
@@ -256,7 +261,7 @@ mod bin {
         dir.new_file(file_name, file_contents).unwrap();
         let source = dir.path().join(file_name);
 
-        let mut cmd = Command::cargo_bin("paq").unwrap();
+        let mut cmd = Command::new(cargo_bin!("paq"));
         let assert = cmd
             .arg(source.as_os_str().to_str().unwrap())
             .arg("--out")
@@ -286,7 +291,7 @@ mod bin {
         let mut output = PathBuf::from(&source).parent().unwrap().to_path_buf();
         output.push(hash_file_name);
 
-        let mut cmd = Command::cargo_bin("paq").unwrap();
+        let mut cmd = Command::new(cargo_bin!("paq"));
         let assert = cmd
             .arg(source.as_os_str().to_str().unwrap())
             .arg(format!("--out={}", output.as_os_str().to_str().unwrap()))
