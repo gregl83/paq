@@ -181,15 +181,15 @@
 
                       shellHook = ''
                         echo "=== paq benchmark environment (pinned versions) ==="
-                        echo "nixpkgs: nixos-24.05"
-                        echo "paq: $(paq --version)"
+                        echo "nixos 24.05"
+                        echo "$(paq --version)"
                         echo ""
                         echo "Package versions:"
-                        echo "  - hyperfine: $(hyperfine --version)"
-                        echo "  - b3sum: $(b3sum --version)"
-                        echo "  - dirhash: ${dirhash.version}"
-                        echo "  - sha256sum: $(sha256sum --version | head -n1)"
-                        echo "  - git: $(git --version)"
+                        echo "  - $(hyperfine --version)"
+                        echo "  - $(b3sum --version)"
+                        echo "  - dirhash ${dirhash.version}"
+                        echo "  - $(sha256sum --version | head -n1)"
+                        echo "  - $(git --version)"
                         echo ""
                         echo "Run: ./benches/hyperfine.sh"
                       '';
