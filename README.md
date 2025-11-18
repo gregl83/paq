@@ -29,7 +29,7 @@ The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5
 [dirhash]: https://github.com/idrassi/DirHash
 [gnusha]: https://www.gnu.org/software/coreutils/manual/html_node/sha2-utilities.html
 
-Performance [benchmark](hyperfine.sh) uses [hyperfine](https://github.com/sharkdp/hyperfine).
+Performance [benchmark](benches/hyperfine.sh) uses [hyperfine](https://github.com/sharkdp/hyperfine).
 
 Commands with `shell` use the following command with various `<hashsum>` implementations:
 
