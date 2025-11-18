@@ -27,7 +27,7 @@ The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5
 [paq]: https://github.com/gregl83/paq
 [b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
 [dirhash]: https://github.com/idrassi/DirHash
-[gnusha]: https://www.gnu.org/software/coreutils/manual/html_node/sha2-utilities.html
+[gnusha]: https://manpages.debian.org/testing/coreutils/sha256sum.1.en.html
 
 Performance [benchmark](benches/hyperfine.sh) uses [hyperfine](https://github.com/sharkdp/hyperfine).
 
