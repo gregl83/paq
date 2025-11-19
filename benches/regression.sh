@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 if [ -z "$1" ]; then
-  echo "Error: 'before' `paq` executable path is required" >&2
+  echo "Error: 'before' executable path is required" >&2
   exit 1
 fi
 BEFORE_PAC_PATH="$1"
 
 if [ -z "$2" ]; then
-  echo "Error: 'after' `paq` executable path is required" >&2
+  echo "Error: 'after' executable path is required" >&2
   exit 1
 fi
 AFTER_PAC_PATH="$2"
