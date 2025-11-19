@@ -380,6 +380,8 @@ Resources:
             # Clone benchmark data repository (target)
             git clone $BENCHMARK_DATA_REPO_URI /mnt/benchmark/target
             git -C /mnt/benchmark/target checkout $BENCHMARK_DATA_REPO_REF
+            # Delete .git directory due variability with configurations and commit history
+            rm -rf /mnt/benchmark/target/.git
             
             # Clone into `paq` repository
             git clone $REPO_URI ~/paq && cd ~/paq && git checkout $REPO_REF
