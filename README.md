@@ -15,7 +15,7 @@ Powered by `blake3` cryptographic hashing algorithm.
 
 ## Performance
 
-The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb7939c) programming language repository was used as a test case (478 MB / 12,540 files).
+The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb7939c) programming language repository was used as a test data source (157 MB / 14,490 files).
 
 | Tool               | Version | Command                   |               Mean [ms] | Min [ms] | Max [ms] |     Relative |
 |:-------------------|:--------|:--------------------------|------------------------:| -------: | -------: | -----------: |

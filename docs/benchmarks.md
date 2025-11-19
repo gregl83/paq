@@ -54,4 +54,4 @@ find ./go -type f -print0 | LC_ALL=C sort -z | xargs -0 <hashsum> | <hashsum>
 
 ## Regression Testing
 
-Benchmarks are used to ensure that `paq` release candidates have equal or better performance to the prior latest release.
+Benchmarks are used to ensure that `paq` release candidates have equal or better performance than past releases.
