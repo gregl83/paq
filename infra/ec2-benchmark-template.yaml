@@ -1,5 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template for reproducible Rust benchmarking.
+Description: >
+  CloudFormation template for reproducible Rust benchmarking.
+  NOTE: This stack is ephemeral and executes code from the provided Git repositories.
+  Review all repository URIs before launching.
 
 Parameters:
   InstanceType:
@@ -12,45 +15,149 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair for SSH access.
 
-  GitRepoUrl:
+  RepoUri:
     Type: String
     Default: https://github.com/gregl83/paq.git
-    Description: URL of `paq` Git repo containing the project (with flake.nix, hyperfine.sh, etc.).
+    Description: Git repository URI for `paq` project (with flake.nix, hyperfine.sh, etc.).
 
-  BenchmarkDataRepo:
+  RepoRef:
+    Type: String
+    Default: main
+    Description: Git `paq` reference to checkout (e.g., main, feature/id/task-description).
+
+  BenchmarkDataRepoUri:
     Type: String
     Default: https://github.com/golang/go.git
-    Description: Git repository to use as benchmark test data
+    Description: Git repository URI for benchmark test data.
+
+  BenchmarkDataRepoRef:
+    Type: String
+    Default: 6e676ab2b809d46623acb5988248d95d1eb7939c
+    Description: Git benchmark test data reference to checkout (e.g., v1.25.0, 6e676ab2b809d46623acb5988248d95d1eb7939c).
 
   InstanceMarketType:
     Type: String
     Default: on-demand
-    Description: 'on-demand' for reliability or spot for cost savings.
-    AllowedValues: [spot, on-demand]
-
-  RustVersion:
-    Type: String
-    Default: "1.82.0"
-    Description: Rust version to use for compilation
-    AllowedPattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    Description: Instance type option of `on-demand` for reliability or `spot` for cost-efficiency.
+    AllowedValues: [on-demand, spot]
 
   SSHAccessCIDR:
     Type: String
-    Default: 0.0.0.0/0
-    Description: CIDR block allowed to SSH (restrict to your IP for security)
+    Description: CIDR block whitelisted for SSH access (restrict to your IP for security).
     AllowedPattern: "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$"
+    ConstraintDescription: Must be a valid CIDR with /32, /24, or /16 suffix. Use /32 for single IP.
 
   AutoShutdown:
     Type: String
     Default: 'true'
     AllowedValues: ['true', 'false']
-    Description: Automatically shutdown after benchmark completes
+    Description: Automatically shutdown after benchmark completes.
+
+Mappings:
+  # This map locks the OS version to al2023-ami-2023.9.20251117.1-kernel-6.12-x86_64 (example AMI name)
+  # This ensures benchmarks run on the same AMI in Tokyo as they do in Virginia.
+  RegionMap:
+    ap-south-1:
+      AMI: ami-05561ceba311a6c7b
+    eu-north-1:
+      AMI: ami-0d2aad4794ad02001
+    eu-west-3:
+      AMI: ami-0047a44c60fc83ff2
+    eu-west-2:
+      AMI: ami-0362cc063ee223c46
+    eu-west-1:
+      AMI: ami-0f64121fa59598bf7
+    ap-northeast-3:
+      AMI: ami-0a1c53f150dd059a2
+    ap-northeast-2:
+      AMI: ami-0ad90ede5f7a6f599
+    ap-northeast-1:
+      AMI: ami-0b4a1602197908813
+    ca-central-1:
+      AMI: ami-04302d6f32dc7f75d
+    sa-east-1:
+      AMI: ami-014276103e7a50841
+    ap-southeast-1:
+      AMI: ami-0b3eb051c6c7936e9
+    ap-southeast-2:
+      AMI: ami-09d0f541181899dd7
+    eu-central-1:
+      AMI: ami-05a797deb2b0220d6
+    us-east-1:
+      AMI: ami-0f00d706c4a80fd93
+    us-east-2:
+      AMI: ami-0017468bf94789869
+    us-west-1:
+      AMI: ami-0e45116a579f0029a
+    us-west-2:
+      AMI: ami-0c5f78ca5e1169a1a
 
 Resources:
+  # --- Network Infrastructure (Standard) ---
+  BenchmarkVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub vpc-${AWS::StackName}
+
+  BenchmarkSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref BenchmarkVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub subnet-${AWS::StackName}
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub igw-${AWS::StackName}
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref BenchmarkVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref BenchmarkVPC
+      Tags:
+        - Key: Name
+          Value: !Sub rt-${AWS::StackName}
+
+  DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref BenchmarkSubnet
+      RouteTableId: !Ref RouteTable
+
+  # --- Security & Permissions ---
   BenchmarkSecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    DependsOn: BenchmarkVPC
     Properties:
-      GroupDescription: Security group for benchmark instance - SSH access only
+      GroupDescription: Security group for benchmark instance - SSH access only.
+      GroupName: !Sub ${AWS::StackName}-benchmark-sg
+      VpcId: !Ref BenchmarkVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -59,7 +166,7 @@ Resources:
           Description: SSH access
       Tags:
         - Key: Name
-          Value: !Sub ${AWS::StackName}-benchmark-sg
+          Value: !Sub sg-${AWS::StackName}-benchmark
 
   InstanceRole:
     Type: AWS::IAM::Role
@@ -79,32 +186,53 @@ Resources:
       Roles:
         - !Ref InstanceRole
 
+  # --- Compute ---
   BenchmarkInstance:
     Type: AWS::EC2::Instance
+    DependsOn:
+      - SubnetRouteTableAssociation
+      - BenchmarkSecurityGroup
+      - DefaultRoute
     Properties:
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
-      ImageId: ami-03c870feb7c37e4ff  # Amazon Linux 2023 AMI 2023.9.20251110.1 x86_64 HVM kernel-6.12
-      IamInstanceProfile: !Ref InstanceProfile  # For any needed IAM roles (e.g., S3 access if your benchmarks need it)
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]  # Amazon Linux from region to AMI mapping
+      IamInstanceProfile: !Ref InstanceProfile  # For any needed IAM roles (e.g., S3 access if required)
+      SubnetId: !Ref BenchmarkSubnet
       SecurityGroupIds:
         - !Ref BenchmarkSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 35
+            VolumeType: gp3
+            Iops: 5000
+            Encrypted: true
+            DeleteOnTermination: true
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          # Set exit immediately, unset vars error, print then exec commands, ensure any failure in pipeline fails
           set -euxo pipefail
 
-          # Set Rust version variable
-          RUST_VERSION="${RustVersion}"
-          # Set auto-shutdown variable
+          # Set auto-shutdown variable (shuts down instance after benchmark runs)
           AUTO_SHUTDOWN="${AutoShutdown}"
 
-          # Create benchmark group and user
+          # Setup Environment for 'bencher' user
+          cat > /etc/profile.d/benchmark-vars.sh <<EOF
+          export REPO_URI="${RepoUri}"
+          export REPO_REF="${RepoRef}"
+          export BENCHMARK_DATA_REPO_URI="${BenchmarkDataRepoUri}"
+          export BENCHMARK_DATA_REPO_REF="${BenchmarkDataRepoRef}"
+          EOF
+
+          # Create `benchmark` group and `bencher` user
           groupadd benchmark
           useradd -m -s /bin/bash -g benchmark bencher
 
-          # Ensure git is installed
+          # Ensure git is installed/available
           dnf install -y git
+
+          echo "=== System Configuration Report ==="
 
           # Memory management - optimized for benchmarking
           sysctl -w vm.swappiness=1
@@ -114,47 +242,96 @@ Resources:
           sysctl -w vm.dirty_expire_centisecs=200
           sysctl -w vm.zone_reclaim_mode=0
           sysctl -w vm.min_free_kbytes=131072
+          echo "Memory settings:"
+          echo "  vm.swappiness=$(sysctl -n vm.swappiness)"
+          echo "  vm.dirty_ratio=$(sysctl -n vm.dirty_ratio)"
+          echo "  vm.dirty_background_ratio=$(sysctl -n vm.dirty_background_ratio)"
+          echo "  vm.dirty_writeback_centisecs=$(sysctl -n vm.dirty_writeback_centisecs)"
+          echo "  vm.dirty_expire_centisecs=$(sysctl -n vm.dirty_expire_centisecs)"
+          echo "  vm.zone_reclaim_mode=$(sysctl -n vm.zone_reclaim_mode)"          
+          echo "  vm.min_free_kbytes=$(sysctl -n vm.min_free_kbytes)"
 
           # Transparent Huge Pages - disable for consistent latency
-          echo never > /sys/kernel/mm/transparent_hugepage/enabled
-          echo never > /sys/kernel/mm/transparent_hugepage/defrag
+          echo "Transparent Huge Pages:"
+          if [ -f /sys/kernel/mm/transparent_hugepage/enabled ]; then
+            echo never > /sys/kernel/mm/transparent_hugepage/enabled
+            echo never > /sys/kernel/mm/transparent_hugepage/defrag
+            echo "  enabled: $(cat /sys/kernel/mm/transparent_hugepage/enabled)"
+            echo "  defrag: $(cat /sys/kernel/mm/transparent_hugepage/defrag)"
+          else
+            echo "  THP not available on this system"
+          fi
 
           # Disable CPU frequency scaling (set to performance mode)
+          echo "CPU Frequency Scaling:"
+          GOV_COUNT=0
+          GOV_SET=0
           for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
             if [ -f "$gov" ]; then
-              echo performance > "$gov"
+              GOV_COUNT=$((GOV_COUNT + 1))
+              echo performance > "$gov" && GOV_SET=$((GOV_SET + 1))
             fi
           done
+          if [ $GOV_COUNT -gt 0 ]; then
+            echo "  Set $GOV_SET of $GOV_COUNT CPUs to performance mode"
+            echo "  Sample: $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo 'N/A')"
+          else
+            echo "  CPU frequency scaling not available"
+          fi
 
           # Disable CPU turbo boost for consistency
-          if [ -f /sys/devices/system/cpu/cpufreq/boost ]; then
-            echo 0 > /sys/devices/system/cpu/cpufreq/boost
-          fi
+          echo "CPU Turbo Boost:"
+          TURBO_DISABLED=false
           if [ -f /sys/devices/system/cpu/intel_pstate/no_turbo ]; then
             echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo
+            echo "  Intel turbo disabled: $(cat /sys/devices/system/cpu/intel_pstate/no_turbo)"
+            TURBO_DISABLED=true
+          elif [ -f /sys/devices/system/cpu/cpufreq/boost ]; then
+            echo 0 > /sys/devices/system/cpu/cpufreq/boost
+            echo "  Boost disabled: $(cat /sys/devices/system/cpu/cpufreq/boost)"
+            TURBO_DISABLED=true
           fi
-          if [ -f /sys/devices/system/cpu/amd_pstate/no_turbo ]; then
-            echo 1 > /sys/devices/system/cpu/amd_pstate/no_turbo
+          if [ "$TURBO_DISABLED" = false ]; then
+            echo "  Turbo boost control not available"
           fi
 
-          # Configure I/O scheduler for NVMe (none/noop for best performance)
-          for disk in /sys/block/nvme*; do
+          # I/O Scheduler - report only, left unmodified due to compatibility issues
+          echo "I/O Schedulers:"
+          for disk in /sys/block/nvme*n*; do
             if [ -d "$disk/queue" ]; then
-              echo none > $disk/queue/scheduler 2>/dev/null || echo noop > $disk/queue/scheduler
-              echo 1024 > $disk/queue/nr_requests
-              echo 2 > $disk/queue/nomerges
+              DISK_NAME=$(basename $disk)
+              echo "  $DISK_NAME: $(cat $disk/queue/scheduler)"
             fi
           done
 
-          # Disable IRQ balance for CPU core isolation
-          systemctl stop irqbalance || true
-          systemctl disable irqbalance || true
+          # Stop unnecessary services - verify
+          echo "Services:"
+          for service in irqbalance postfix atd crond rsyslog; do
+            if systemctl is-active --quiet $service; then
+              systemctl stop $service
+              systemctl disable $service
+              echo "  $service: stopped and disabled"
+            else
+              echo "  $service: already inactive"
+            fi
+          done
 
-          # Stop unnecessary services to reduce noise
-          systemctl stop postfix || true
-          systemctl stop atd || true
-          systemctl stop crond || true
-          systemctl stop rsyslog || true
+          # CPU information
+          echo "CPU Information:"
+          echo "  Model: $(grep 'model name' /proc/cpuinfo | head -1 | cut -d: -f2 | xargs)"
+          echo "  Cores: $(nproc)"
+          echo "  Architecture: $(uname -m)"
+
+          # Memory information
+          echo "Memory Information:"
+          echo "  Total: $(free -h | awk '/^Mem:/ {print $2}')"
+          echo "  Available: $(free -h | awk '/^Mem:/ {print $7}')"
+
+          # Disk information
+          echo "Disk Information:"
+          df -h / | tail -1 | awk '{printf "  Root: %s total, %s available\n", $2, $4}'
+
+          echo "=== Configuration Complete ==="
 
           # Create benchmark directory on root volume
           mkdir -p /mnt/benchmark
@@ -171,7 +348,7 @@ Resources:
           bencher hard cpu unlimited
           EOF
           
-          # Set mnt ownership
+          # Set benchmark mount ownership and permissions
           chown bencher:benchmark /mnt/benchmark
           chmod 755 /mnt/benchmark
           
@@ -181,54 +358,54 @@ Resources:
           sync
           rm -f /mnt/benchmark/warmup
           
-          # Run benchmark as dedicated user (bencher)
+          # Install Nix in Multi-User mode (daemon)
+          echo "Installing Nix package manager..."
+          export HOME=/root
+          curl -L https://nixos.org/nix/install | sh -s -- --daemon --yes
+          # Configure flakes globally so `bencher` user can use them
+          mkdir -p /etc/nix
+          echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+          
+          echo "=== Starting Benchmark ==="
+          
+          # Run benchmark as `bencher` user (dedicated)
           su - bencher <<'BENCH'
             set -euxo pipefail
-          
-            # Install Nix for reproducible environment
-            echo "Installing Nix package manager..."
-            curl -L https://nixos.org/nix/install | sh -s -- --no-daemon
         
-            # Source Nix
-            . $HOME/.nix-profile/etc/profile.d/nix.sh
-        
-            # Enable flakes
-            mkdir -p ~/.config/nix
-            echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
+            # Source the Nix daemon environment
+            if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+              . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+            fi
           
-            # Clone benchmark test data
-            git clone ${BenchmarkDataRepo} /mnt/benchmark/go
+            # Clone benchmark data repository (target)
+            git clone $BENCHMARK_DATA_REPO_URI /mnt/benchmark/target
+            git -C /mnt/benchmark/target checkout $BENCHMARK_DATA_REPO_REF
             
-            # Clone into paq repo dir
-            git clone ${GitRepoUrl} ~/paq && cd ~/paq
+            # Clone into `paq` repository
+            git clone $REPO_URI ~/paq && cd ~/paq && git checkout $REPO_REF
 
-            # Build using Nix
+            # Build and Run benchmark using Nix
             nix build --no-link --print-out-paths
-          
-            # Run hyperfine benchmarks
-            nix develop .#benchmark --command bash -c './benches/hyperfine.sh'
+            nix develop .#benchmark --command bash benches/hyperfine.sh /mnt/benchmark/target
           BENCH
 
           if [ "$AUTO_SHUTDOWN" = "true" ]; then
             shutdown -h now
           fi
-      BlockDeviceMappings:
-        - DeviceName: /dev/xvda
-          Ebs:
-            VolumeSize: 35  # GiB; enough for Nix store and Rust builds
-            VolumeType: gp3
-            Iops: 5000  # Gp3 supports up to 16000; consider more as needed
-            Throughput: 1000
-            DeleteOnTermination: true
-      Tags:
-        - Key: Name
-          Value: Benchmark-Instance
 
 Outputs:
   InstanceId:
     Value: !Ref BenchmarkInstance
-    Description: The ID of the launched EC2 instance.
+    Description: EC2 instance ID.
 
   PublicIp:
     Value: !GetAtt BenchmarkInstance.PublicIp
     Description: Public IP for SSH access.
+
+  VpcId:
+    Value: !Ref BenchmarkVPC
+    Description: VPC ID.
+
+  SubnetId:
+    Value: !Ref BenchmarkSubnet
+    Description: Subnet ID.
