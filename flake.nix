@@ -203,7 +203,7 @@
                     echo "  - $(sha256sum --version | head -n1)"
                     echo "  - $(git --version)"
                     echo ""
-                    echo "Run: ./benches/hyperfine.sh"
+                    echo "Run: ./benches/comparison.sh"
                   '';
                 };
             };

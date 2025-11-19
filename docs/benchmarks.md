@@ -44,7 +44,7 @@ The benchmark compute instance relies on the `paq` [flake.nix](../flake.nix) con
 
 Benchmarks are executed using [hyperfine](https://github.com/sharkdp/hyperfine).
 
-The [benches](../benches) directory contains a helper script, [hyperfine.sh](../benches/hyperfine.sh), which invokes `hyperfine` to run comparative benchmarks against other tools.
+The [benches](../benches) directory contains a helper script, [comparison.sh](../benches/comparison.sh), which invokes `hyperfine` to run comparative benchmarks against other tools.
 
 Hyperfine benchmark commands starting with `find` use the following command with various `<hashsum>` implementations:
 
