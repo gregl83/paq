@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 if [ -z "$1" ]; then
-    echo "Error: target system path to hash is required" >&2
-    exit 1
+  echo "Error: target system path to hash is required" >&2
+  exit 1
 fi
 TARGET_PATH="$1"
 

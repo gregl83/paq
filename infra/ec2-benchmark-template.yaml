@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: >
   CloudFormation template for reproducible Rust benchmarking.
   NOTE: This stack is ephemeral and executes code from the provided Git repositories.
@@ -49,8 +49,8 @@ Parameters:
 
   AutoShutdown:
     Type: String
-    Default: 'true'
-    AllowedValues: ['true', 'false']
+    Default: "true"
+    AllowedValues: ["true", "false"]
     Description: Automatically shutdown after benchmark completes.
 
 Mappings:
@@ -109,7 +109,7 @@ Resources:
     Properties:
       VpcId: !Ref BenchmarkVPC
       CidrBlock: 10.0.1.0/24
-      AvailabilityZone: !Select [0, !GetAZs '']
+      AvailabilityZone: !Select [0, !GetAZs ""]
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -172,13 +172,13 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal: { Service: ec2.amazonaws.com }
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore  # For SSM access if needed
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore # For SSM access if needed
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -196,8 +196,8 @@ Resources:
     Properties:
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
-      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]  # Amazon Linux from region to AMI mapping
-      IamInstanceProfile: !Ref InstanceProfile  # For any needed IAM roles (e.g., S3 access if required)
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI] # Amazon Linux from region to AMI mapping
+      IamInstanceProfile: !Ref InstanceProfile # For any needed IAM roles (e.g., S3 access if required)
       SubnetId: !Ref BenchmarkSubnet
       SecurityGroupIds:
         - !Ref BenchmarkSecurityGroup
@@ -248,7 +248,7 @@ Resources:
           echo "  vm.dirty_background_ratio=$(sysctl -n vm.dirty_background_ratio)"
           echo "  vm.dirty_writeback_centisecs=$(sysctl -n vm.dirty_writeback_centisecs)"
           echo "  vm.dirty_expire_centisecs=$(sysctl -n vm.dirty_expire_centisecs)"
-          echo "  vm.zone_reclaim_mode=$(sysctl -n vm.zone_reclaim_mode)"          
+          echo "  vm.zone_reclaim_mode=$(sysctl -n vm.zone_reclaim_mode)"
           echo "  vm.min_free_kbytes=$(sysctl -n vm.min_free_kbytes)"
 
           # Transparent Huge Pages - disable for consistent latency
@@ -335,7 +335,7 @@ Resources:
 
           # Create benchmark directory on root volume
           mkdir -p /mnt/benchmark
-          
+
           # Set resource limits for benchmark user
           cat >> /etc/security/limits.conf <<EOF
           bencher soft nofile 65536
@@ -347,17 +347,17 @@ Resources:
           bencher soft cpu unlimited
           bencher hard cpu unlimited
           EOF
-          
+
           # Set benchmark mount ownership and permissions
           chown bencher:benchmark /mnt/benchmark
           chmod 755 /mnt/benchmark
-          
+
           # Write and sync to warm up disk
           dd if=/dev/zero of=/mnt/benchmark/warmup bs=1M count=6144 oflag=direct conv=fdatasync
           dd if=/mnt/benchmark/warmup of=/dev/null bs=1M iflag=direct
           sync
           rm -f /mnt/benchmark/warmup
-          
+
           # Install Nix in Multi-User mode (daemon)
           echo "Installing Nix package manager..."
           export HOME=/root
@@ -365,24 +365,24 @@ Resources:
           # Configure flakes globally so `bencher` user can use them
           mkdir -p /etc/nix
           echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
-          
+
           echo "=== Starting Benchmark ==="
-          
+
           # Run benchmark as `bencher` user (dedicated)
           su - bencher <<'BENCH'
             set -euxo pipefail
-        
+
             # Source the Nix daemon environment
             if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
               . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
             fi
-          
+
             # Clone benchmark data repository (target)
             git clone $BENCHMARK_DATA_REPO_URI /mnt/benchmark/target
             git -C /mnt/benchmark/target checkout $BENCHMARK_DATA_REPO_REF
             # Delete .git directory due variability with configurations and commit history
             rm -rf /mnt/benchmark/target/.git
-            
+
             # Clone into `paq` repository
             git clone $REPO_URI ~/paq && cd ~/paq && git checkout $REPO_REF
 
