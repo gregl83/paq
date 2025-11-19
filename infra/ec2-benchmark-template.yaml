@@ -18,7 +18,7 @@ Parameters:
   RepoUri:
     Type: String
     Default: https://github.com/gregl83/paq.git
-    Description: Git repository URI for `paq` project (with flake.nix, hyperfine.sh, etc.).
+    Description: Git repository URI for `paq` project (with flake.nix, comparison.sh, etc.).
 
   RepoRef:
     Type: String
@@ -388,7 +388,7 @@ Resources:
 
             # Build and Run benchmark using Nix
             nix build --no-link --print-out-paths
-            nix develop .#benchmark --command bash benches/hyperfine.sh /mnt/benchmark/target
+            nix develop .#benchmark --command bash benches/comparison.sh /mnt/benchmark/target
           BENCH
 
           if [ "$AUTO_SHUTDOWN" = "true" ]; then
