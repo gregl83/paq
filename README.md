@@ -17,31 +17,34 @@ Powered by `blake3` cryptographic hashing algorithm.
 
 The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb7939c) programming language repository was used as a test case (478 MB / 12,540 files).
 
-| Tool               | Version | Command                  |               Mean [ms] | Min [ms] | Max [ms] |     Relative |
-|:-------------------|:--------|:-------------------------|------------------------:| -------: | -------: | -----------: |
-| [paq][paq]         | latest  |  `paq ./go`              |             116.4 ± 2.6 |    111.4 |    120.9 |         1.00 |
-| [b3sum][b3sum]     | 1.5.1   | `shell b3sum`            |             132.4 ± 1.5 |    129.6 |    135.9 |  1.14 ± 0.03 |
-| [dirhash][dirhash] | 0.5.0   | `dirhash -a sha256 ./go` |             642.5 ± 5.8 |    634.7 |    649.8 |  5.52 ± 0.13 |
-| [GNU sha2][gnusha] | 9.7     | `shell sha256sum`        |           1583.0 ± 16.3 |   1568.6 |   1606.8 | 13.60 ± 0.33 |
+| Tool               | Version | Command                   |               Mean [ms] | Min [ms] | Max [ms] |     Relative |
+|:-------------------|:--------|:--------------------------|------------------------:| -------: | -------: | -----------: |
+| [paq][paq]         | latest  | `paq ./go`                |             116.4 ± 2.6 |    111.4 |    120.9 |         1.00 |
+| [b3sum][b3sum]     | 1.5.1   | `find ./go ... b3sum`     |             132.4 ± 1.5 |    129.6 |    135.9 |  1.14 ± 0.03 |
+| [dirhash][dirhash] | 0.5.0   | `dirhash -a sha256 ./go`  |             642.5 ± 5.8 |    634.7 |    649.8 |  5.52 ± 0.13 |
+| [GNU sha2][gnusha] | 9.7     | `find ./go ... sha256sum` |           1583.0 ± 16.3 |   1568.6 |   1606.8 | 13.60 ± 0.33 |
 
 [paq]: https://github.com/gregl83/paq
 [b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
 [dirhash]: https://github.com/andhus/dirhash-python
 [gnusha]: https://manpages.debian.org/testing/coreutils/sha256sum.1.en.html
 
-Commands with `shell` use the following command with various `<hashsum>` implementations:
-
-```bash
-find ./go -type f -print0 | LC_ALL=C sort -z | xargs -0 <hashsum> | <hashsum>
-```
-
 See [benchmarks](docs/benchmarks.md) documentation for more details.
 
 ## Installation
 
+### Pre-Built Binary
+
+Windows, macOS, and Ubuntu are supported.
+
+1. **Download:** Go to the [Latest Release](https://github.com/gregl83/paq/releases) page and download the `.zip` archive matching your OS and Architecture.
+2. **Extract:** Unzip the `.zip` archive to retrieve the `paq` binary.
+3. **Install:** Make the `paq` binary executable (e.g., `chmod +x`) and move it to a directory in your system PATH.
+4. **Verify:** Confirm installation by running `paq --version` from the Command Line Interface.
+
 ### Cargo Install
 
-Installation requires [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+Requires the [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) package manager.
 
 #### Install From Crates.io
 
@@ -51,25 +54,18 @@ cargo install paq
 
 #### Install From Repository Clone (Unstable)
 
-Not recommended due to instability of `main` branch in-between releases.
+Not recommended due to instability of `main` branch in-between tagged releases.
 
 1. Clone this repository.
 2. Run `cargo install --path .` from repository root.
 
 ### Nix Flakes
 
-Installation requires [nix](https://nix.dev/) and the `nix-command` [experimental feature](https://nixos.wiki/wiki/Flakes#Enable_flakes_temporarily) to be enabled.
+Requires [nix](https://nix.dev/) and the `nix-command` [experimental feature](https://nixos.wiki/wiki/Flakes#Enable_flakes_temporarily) to be enabled.
 
 ```bash
 nix profile add github:gregl83/paq
 ```
-
-### Pre-Built Binary Package
-
-1. Find [Latest Release](https://github.com/gregl83/paq/releases) `.zip` archive for computer Operating System and Architecture.
-2. Download and extract `.zip`.
-3. Modify permissions of the extracted `paq` binary to allow execution.
-4. Move `paq` to a system path.
 
 ## Usage
 

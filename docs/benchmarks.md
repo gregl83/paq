@@ -7,7 +7,7 @@
 
 This document outlines the process for creating reproducible and comparative benchmarks for `paq`.
 
-Benchmarks for `paq` and similar tools are located in the [benches](../benches) directory of this repository.
+Benchmarks are located in the [benches](../benches) directory of this repository.
 
 Reproducibility relies on four main tools:
 
@@ -45,6 +45,12 @@ The benchmark compute instance relies on the `paq` [flake.nix](../flake.nix) con
 Benchmarks are executed using [hyperfine](https://github.com/sharkdp/hyperfine).
 
 The [benches](../benches) directory contains a helper script, [hyperfine.sh](../benches/hyperfine.sh), which invokes `hyperfine` to run comparative benchmarks against other tools.
+
+Hyperfine benchmark commands starting with `find` use the following command with various `<hashsum>` implementations:
+
+```bash
+find ./go -type f -print0 | LC_ALL=C sort -z | xargs -0 <hashsum> | <hashsum>
+```
 
 ## Regression Testing
 
