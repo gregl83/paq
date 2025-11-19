@@ -16,7 +16,7 @@ Reproducibility relies on four main tools:
 - **[Nix](https://nixos.org/):** For pinned software versions and dependencies.
 - **[Hyperfine](https://github.com/sharkdp/hyperfine):** For standardizing benchmark execution.
 
-## Benchmark Tools
+## Benchmark Tool Usage
 
 ### AWS EC2 Instance
 
@@ -45,3 +45,7 @@ The benchmark compute instance relies on the `paq` [flake.nix](../flake.nix) con
 Benchmarks are executed using [hyperfine](https://github.com/sharkdp/hyperfine).
 
 The [benches](../benches) directory contains a helper script, [hyperfine.sh](../benches/hyperfine.sh), which invokes `hyperfine` to run comparative benchmarks against other tools.
+
+## Regression Testing
+
+Benchmarks are used to ensure that `paq` release candidates have equal or better performance to the prior latest release.

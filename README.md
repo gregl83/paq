@@ -15,7 +15,7 @@ Powered by `blake3` cryptographic hashing algorithm.
 
 ## Performance
 
-The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5772d0) programming language repository was used as a test case (478 MB / 12,540 files).
+The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb7939c) programming language repository was used as a test case (478 MB / 12,540 files).
 
 | Tool               | Version | Command                  |               Mean [ms] | Min [ms] | Max [ms] |     Relative |
 |:-------------------|:--------|:-------------------------|------------------------:| -------: | -------: | -----------: |
@@ -26,7 +26,7 @@ The [go](https://github.com/golang/go/commit/8b5fe5980cc116366b37ed8aa83569cadf5
 
 [paq]: https://github.com/gregl83/paq
 [b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
-[dirhash]: https://github.com/idrassi/DirHash
+[dirhash]: https://github.com/andhus/dirhash-python
 [gnusha]: https://manpages.debian.org/testing/coreutils/sha256sum.1.en.html
 
 Commands with `shell` use the following command with various `<hashsum>` implementations:
