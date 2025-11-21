@@ -67,6 +67,10 @@ Requires [nix](https://nix.dev/) and the `nix-command` [experimental feature](ht
 nix profile add github:gregl83/paq
 ```
 
+### Python Package
+
+Support for Python is available in the [paqpy](https://github.com/gregl83/paqpy) package.
+
 ## Usage
 
 Command Line Interface executable or Crate library.
