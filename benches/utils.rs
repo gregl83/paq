@@ -79,11 +79,11 @@ impl TempDir {
 
         // fill buffer with pseudo-random noise (avoiding 'rand' dependency)
         let mut state: u32 = 0xDEADBEEF;
-        for i in 0..BUFFER_SIZE {
+        buffer.iter_mut().for_each(|byte| {
             // Linear Congruential Generator (LCG) step; high entropy
             state = state.wrapping_mul(1664525).wrapping_add(1013904223);
-            buffer[i] = (state >> 24) as u8;
-        }
+            *byte = (state >> 24) as u8;
+        });
 
         let mut file = fs::File::create(&file_path)
             .map_err(|e| err!("failed to create file {}: {}", file_path.display(), e))?;

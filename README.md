@@ -17,12 +17,12 @@ Powered by `blake3` cryptographic hashing algorithm.
 
 The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb7939c) programming language repository was used as a test data source (157 MB / 14,490 files).
 
-| Tool               | Version | Command                   |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
-| :----------------- | :------ | :------------------------ | ------------: | -------: | -------: | -----------: |
-| [paq][paq]         | latest  | `paq ./go`                |   116.4 ± 2.6 |    111.4 |    120.9 |         1.00 |
-| [b3sum][b3sum]     | 1.5.1   | `find ./go ... b3sum`     |   132.4 ± 1.5 |    129.6 |    135.9 |  1.14 ± 0.03 |
-| [dirhash][dirhash] | 0.5.0   | `dirhash -a sha256 ./go`  |   642.5 ± 5.8 |    634.7 |    649.8 |  5.52 ± 0.13 |
-| [GNU sha2][gnusha] | 9.7     | `find ./go ... sha256sum` | 1583.0 ± 16.3 |   1568.6 |   1606.8 | 13.60 ± 0.33 |
+| Tool               | Version | Command                   |    Mean [ms] | Min [ms] | Max [ms] |    Relative |
+| :----------------- | :------ | :------------------------ | -----------: | -------: | -------: | ----------: |
+| [paq][paq]         | latest  | `paq ./go`                |   99.5 ± 0.7 |     98.6 |    101.6 |        1.00 |
+| [b3sum][b3sum]     | 1.5.1   | `find ./go ... b3sum`     |  314.3 ± 3.9 |    308.9 |    320.8 | 3.16 ± 0.04 |
+| [dirhash][dirhash] | 0.5.0   | `dirhash -a sha256 ./go`  |  565.1 ± 5.8 |    558.7 |    572.3 | 5.68 ± 0.07 |
+| [GNU sha2][gnusha] | 9.7     | `find ./go ... sha256sum` | 752.0 ± 60.7 |    683.2 |    817.1 | 7.56 ± 0.61 |
 
 [paq]: https://github.com/gregl83/paq
 [b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
