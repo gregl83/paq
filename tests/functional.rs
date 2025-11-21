@@ -1,9 +1,12 @@
 mod utils;
 
 mod lib {
+    use std::{
+        env,
+        path::PathBuf,
+    };
+
     use crate::utils::TempDir;
-    use std::env;
-    use std::path::PathBuf;
 
     #[test]
     fn it_hashes_single_file() {

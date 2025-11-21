@@ -1,8 +1,16 @@
-use std::env;
-use std::error;
-use std::fs::{self};
-use std::path::{Path, PathBuf};
-use std::result;
+use std::{
+    cmp,
+    env,
+    error,
+    io::Write,
+    fs,
+    path::{
+        Path,
+        PathBuf,
+    },
+    result,
+};
+
 
 pub const TEMP_DIRECTORY_NAME: &str = "paq";
 
@@ -20,8 +28,7 @@ macro_rules! err {
 /// A simple wrapper for creating a temporary directory that is automatically
 /// deleted when it's dropped.
 ///
-/// We use this in lieu of tempfile because tempfile brings in too many
-/// dependencies.
+/// We use this in lieu of tempfile because tempfile brings in too many dependencies.
 #[derive(Debug)]
 pub struct TempDir(PathBuf);
 
@@ -52,10 +59,44 @@ impl TempDir {
         Err(err!("failed to create temp dir after {} tries", TRIES))
     }
 
-    /// Create a new file in temporary directory using data of byte array.
+    /// Create a file in temporary directory using data of byte array.
     pub fn new_file(&self, name: &str, data: &[u8]) -> Result<()> {
         let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        fs::write(file_path.as_os_str(), data).expect("Unable to write file");
+        fs::write(file_path.as_os_str(), data)
+            .map_err(|e| err!("failed to write data to {}: {}", file_path.display(), e))?;
+        Ok(())
+    }
+
+    /// Create a file filled with pseudo-random non-zero bytes.
+    ///
+    /// This is critical for benchmarking compression or I/O, as it forces
+    /// actual disk writes and prevents Run-Length Encoding (RLE) optimizations.
+    pub fn new_file_with_random_data(&self, name: &str, file_size: u64) -> Result<()> {
+        let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
+
+        const BUFFER_SIZE: usize = 8 * 1024; // reduce syscalls; 8KB is an efficient page size
+        let mut buffer = [0u8; BUFFER_SIZE];
+
+        // fill buffer with pseudo-random noise (avoiding 'rand' dependency)
+        let mut state: u32 = 0xDEADBEEF;
+        buffer.iter_mut().for_each(|byte| {
+            // Linear Congruential Generator (LCG) step; high entropy
+            state = state.wrapping_mul(1664525).wrapping_add(1013904223);
+            *byte = (state >> 24) as u8;
+        });
+
+        let mut file = fs::File::create(&file_path)
+            .map_err(|e| err!("failed to create file {}: {}", file_path.display(), e))?;
+
+        let mut remaining: usize = file_size.try_into().unwrap();
+        while remaining > 0 {
+            // reuse random buffer to save CPU time (repeat every 8KB); otherwise, move within loop
+            let to_write = cmp::min(remaining, BUFFER_SIZE);
+            file.write_all(&buffer[..to_write])
+                .map_err(|e| err!("failed to write data to {}: {}", file_path.display(), e))?;
+            remaining -= to_write;
+        }
+
         Ok(())
     }
 
