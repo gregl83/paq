@@ -19,6 +19,6 @@ fi
 TARGET_PATH="$3"
 
 hyperfine \
-  -n "[before] ${BEFORE_PAC_PATH}" "${BEFORE_PAC_PATH} '${TARGET_PATH}'" \
-  -n "[after] ${AFTER_PAC_PATH}" "${AFTER_PAC_PATH} '${TARGET_PATH}'" \
+  -n "[before] ${BEFORE_PAC_PATH}" "${BEFORE_PAC_PATH} ${TARGET_PATH}" \
+  -n "[after] ${AFTER_PAC_PATH}" "${AFTER_PAC_PATH} ${TARGET_PATH}" \
   --warmup 3

@@ -167,6 +167,30 @@ mod file_size {
         });
     }
 
+    #[cfg(not(target_os = "windows"))]
+    #[bench]
+    fn bench_small_file_mmap_advise_sequential(b: &mut Bencher) {
+        let dir = TempDir::new(
+            "bench_small_file_mmap"
+        ).unwrap();
+
+        let file_name = "small_file";
+
+        dir.new_file_with_random_data(file_name, SMALL_FILE_SIZE).unwrap();
+
+        let source = dir.path().canonicalize().unwrap();
+        let file_path= source.join(file_name);
+
+        b.iter(|| {
+            let mut hasher = Hasher::new();
+            let file = fs::File::open(&file_path).unwrap();
+            let mmap = unsafe { Mmap::map(&file) }.unwrap();
+            _ = mmap.advise(memmap2::Advice::Sequential);
+            hasher.update(&mmap);
+            *hasher.finalize().as_bytes()
+        });
+    }
+
     #[bench]
     fn bench_small_file_buffer(b: &mut Bencher) {
         let dir = TempDir::new(
@@ -236,6 +260,30 @@ mod file_size {
         });
     }
 
+    #[cfg(not(target_os = "windows"))]
+    #[bench]
+    fn bench_medium_file_mmap_advise_sequential(b: &mut Bencher) {
+        let dir = TempDir::new(
+            "bench_medium_file_mmap"
+        ).unwrap();
+
+        let file_name = "medium_file";
+
+        dir.new_file_with_random_data(file_name, MEDIUM_FILE_SIZE).unwrap();
+
+        let source = dir.path().canonicalize().unwrap();
+        let file_path= source.join(file_name);
+
+        b.iter(|| {
+            let mut hasher = Hasher::new();
+            let file = fs::File::open(&file_path).unwrap();
+            let mmap = unsafe { Mmap::map(&file) }.unwrap();
+            _ = mmap.advise(memmap2::Advice::Sequential);
+            hasher.update(&mmap);
+            *hasher.finalize().as_bytes()
+        });
+    }
+
     #[bench]
     fn bench_medium_file_buffer(b: &mut Bencher) {
         let dir = TempDir::new(
@@ -300,6 +348,30 @@ mod file_size {
             let mut hasher = Hasher::new();
             let file = fs::File::open(&file_path).unwrap();
             let mmap = unsafe { Mmap::map(&file) }.unwrap();
+            hasher.update(&mmap);
+            *hasher.finalize().as_bytes()
+        });
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    #[bench]
+    fn bench_large_file_mmap_advise_sequential(b: &mut Bencher) {
+        let dir = TempDir::new(
+            "bench_large_file_mmap"
+        ).unwrap();
+
+        let file_name = "large_file";
+
+        dir.new_file_with_random_data(file_name, LARGE_FILE_SIZE).unwrap();
+
+        let source = dir.path().canonicalize().unwrap();
+        let file_path= source.join(file_name);
+
+        b.iter(|| {
+            let mut hasher = Hasher::new();
+            let file = fs::File::open(&file_path).unwrap();
+            let mmap = unsafe { Mmap::map(&file) }.unwrap();
+            _ = mmap.advise(memmap2::Advice::Sequential);
             hasher.update(&mmap);
             *hasher.finalize().as_bytes()
         });

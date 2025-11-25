@@ -15,8 +15,14 @@ use walkdir::{DirEntry, WalkDir};
 
 
 pub const MAX_FILE_SIZE_FOR_UNBUFFERED_READ: u64 = 1024 + 1;
-pub const MIN_FILE_SIZE_FOR_MMAP_READ: u64 = 1_048_576 - 1;
-pub const FILE_BUFFER_SIZE: usize = 32_768;
+#[cfg(not(target_os = "windows"))]
+pub const MIN_FILE_SIZE_FOR_MMAP_READ: u64 = 1024 * 1024 - 1;
+#[cfg(target_os = "windows")]
+pub const MIN_FILE_SIZE_FOR_MMAP_READ: u64 = 1024 * 1024 * 1024 - 1;
+#[cfg(not(target_os = "windows"))]
+pub const FILE_BUFFER_SIZE: usize = 32 * 1024;
+#[cfg(target_os = "windows")]
+pub const FILE_BUFFER_SIZE: usize = 128 * 1024;
 
 #[inline]
 fn is_hidden(entry: &DirEntry) -> bool {
@@ -108,7 +114,7 @@ fn hash_path(root: &Path, path: PathBuf) -> [u8; 32] {
             // empty file, return immediately
             return *hasher.finalize().as_bytes();
         } else if file_size < MAX_FILE_SIZE_FOR_UNBUFFERED_READ {
-            // medium file read using unbuffered
+            // small file read using unbuffered
             let file = fs::read(&path).unwrap();
             hasher.update(&file);
         } else if file_size > MIN_FILE_SIZE_FOR_MMAP_READ {
