@@ -137,7 +137,8 @@ fn hash_paths(root: &Path, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
         .into_par_iter()
         .map(|path| hash_path(root, path))
         .collect();
-    hashes.sort_unstable();
+    // parallel sort using default rayon MAX_SEQUENTIAL threshold (2k items)
+    hashes.par_sort_unstable();
     hashes
 }
 

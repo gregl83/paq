@@ -109,6 +109,126 @@ mod hash_algorithms {
     }
 }
 
+mod hash_list_sorting {
+    use super::*;
+
+    use rayon::prelude::ParallelSliceMut;
+
+    #[bench]
+    fn bench_blake3_hashes_sequential_sort_1000(b: &mut Bencher) {
+        let mut warmup: Vec<i32> = (0..64).collect();
+        warmup.par_sort_unstable();
+
+        let file_hashes: Vec<[u8; 32]> = (0..1000)
+            .map(|i| {
+                blake3::hash(
+                    format!("test_file_{i}").as_bytes()
+                ).as_bytes().to_owned()
+            })
+            .collect();
+
+        b.iter(move || {
+            let mut file_hashes = file_hashes.clone();
+            file_hashes.sort_unstable();
+        });
+    }
+
+    #[bench]
+    fn bench_blake3_hashes_sequential_sort_2000(b: &mut Bencher) {
+        let mut warmup: Vec<i32> = (0..64).collect();
+        warmup.par_sort_unstable();
+
+        let file_hashes: Vec<[u8; 32]> = (0..2000)
+            .map(|i| {
+                blake3::hash(
+                    format!("test_file_{i}").as_bytes()
+                ).as_bytes().to_owned()
+            })
+            .collect();
+
+        b.iter(move || {
+            let mut file_hashes = file_hashes.clone();
+            file_hashes.sort_unstable();
+        });
+    }
+
+    #[bench]
+    fn bench_blake3_hashes_sequential_sort_5000(b: &mut Bencher) {
+        let mut warmup: Vec<i32> = (0..64).collect();
+        warmup.par_sort_unstable();
+
+        let file_hashes: Vec<[u8; 32]> = (0..5000)
+            .map(|i| {
+                blake3::hash(
+                    format!("test_file_{i}").as_bytes()
+                ).as_bytes().to_owned()
+            })
+            .collect();
+
+        b.iter(move || {
+            let mut file_hashes = file_hashes.clone();
+            file_hashes.sort_unstable();
+        });
+    }
+
+    #[bench]
+    fn bench_blake3_hashes_parallel_sort_1000(b: &mut Bencher) {
+        let mut warmup: Vec<i32> = (0..64).collect();
+        warmup.par_sort_unstable();
+
+        let file_hashes: Vec<[u8; 32]> = (0..1000)
+            .map(|i| {
+                blake3::hash(
+                    format!("test_file_{i}").as_bytes()
+                ).as_bytes().to_owned()
+            })
+            .collect();
+
+        b.iter(move || {
+            let mut file_hashes = file_hashes.clone();
+            file_hashes.par_sort_unstable();
+        });
+    }
+
+    #[bench]
+    fn bench_blake3_hashes_parallel_sort_2000(b: &mut Bencher) {
+        let mut warmup: Vec<i32> = (0..64).collect();
+        warmup.par_sort_unstable();
+
+        let file_hashes: Vec<[u8; 32]> = (0..2000)
+            .map(|i| {
+                blake3::hash(
+                    format!("test_file_{i}").as_bytes()
+                ).as_bytes().to_owned()
+            })
+            .collect();
+
+        b.iter(move || {
+            let mut file_hashes = file_hashes.clone();
+            file_hashes.par_sort_unstable();
+        });
+    }
+
+    #[bench]
+    fn bench_blake3_hashes_parallel_sort_5000(b: &mut Bencher) {
+        let mut warmup: Vec<i32> = (0..64).collect();
+        warmup.par_sort_unstable();
+
+        let file_hashes: Vec<[u8; 32]> = (0..5000)
+            .map(|i| {
+                blake3::hash(
+                    format!("test_file_{i}").as_bytes()
+                ).as_bytes().to_owned()
+            })
+            .collect();
+
+        b.iter(move || {
+            let mut file_hashes = file_hashes.clone();
+            file_hashes.par_sort_unstable();
+        });
+    }
+}
+
 mod file_size {
     use super::*;
 
