@@ -31,7 +31,6 @@ The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb
 [dirhash]: https://github.com/andhus/dirhash-python
 [folder-hash]: https://github.com/marc136/node-folder-hash
 
-
 See [benchmarks](docs/benchmarks.md) documentation for more details.
 
 ## Installation
