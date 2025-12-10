@@ -177,12 +177,12 @@
 
                     src = benchmarkPkgs.fetchFromGitHub {
                       owner = "marc136";
-                      repo = "node-folder-hash"; # Note: Repo name is node-folder-hash
+                      repo = "node-folder-hash";
                       rev = "v${version}";
-                      sha256 = benchmarkPkgs.lib.fakeSha256;
+                      sha256 = "yU0fx1hkKDILdAxLgXfNOj3vAwoAbHq6y2hvdYnyB8Y=";
                     };
 
-                    npmDepsHash = benchmarkPkgs.lib.fakeSha256;
+                    npmDepsHash = "sha256-wVNtiK0j3rIWqtf9AHqkRgCfOiq4cxZRPJU7/ncaCR8=";
 
                     # Pure JS package, no compile step needed
                     dontNpmBuild = true;
