@@ -1,6 +1,3 @@
-#[path="../src/lib.rs"]
-mod paq;
-
 use std::{
     hint::black_box,
     time::Duration,

@@ -1,6 +1,3 @@
-#[path="../src/lib.rs"]
-mod paq;
-
 use std::time::Duration;
 
 use criterion::{

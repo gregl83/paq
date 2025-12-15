@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 #[path="../src/lib.rs"]
 mod paq;
 mod utils;
