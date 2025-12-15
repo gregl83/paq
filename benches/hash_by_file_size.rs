@@ -109,7 +109,7 @@ fn bench_hash_by_file_size(c: &mut Criterion) {
                 let p = file_path.clone();
                 b.iter(|| {
                     let mut hasher = Hasher::new();
-                    let file = fs::File::open(&file_path).unwrap();
+                    let file = fs::File::open(&p).unwrap();
                     let mmap = unsafe { Mmap::map(&file) }.unwrap();
                     _ = mmap.advise(memmap2::Advice::Sequential);
                     hasher.update(&mmap);
