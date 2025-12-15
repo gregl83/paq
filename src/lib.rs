@@ -89,11 +89,11 @@ fn hash_path(root: &Path, path: &Path) -> [u8; 32] {
             return *hasher.finalize().as_bytes();
         } else if file_size < MAX_FILE_SIZE_FOR_UNBUFFERED_READ {
             // small file read using unbuffered
-            let file = fs::read(&path).unwrap();
+            let file = fs::read(path).unwrap();
             hasher.update(&file);
         } else if file_size > MIN_FILE_SIZE_FOR_MMAP_READ {
             // large size files read using mmap or fail to buffered read
-            let file = fs::File::open(&path).unwrap();
+            let file = fs::File::open(path).unwrap();
             match unsafe { Mmap::map(&file) } {
                 Ok(mmap) => { hasher.update(&mmap); },
                 Err(_) => { buffer_file_to_hasher(&mut hasher, relative_path); },
@@ -144,7 +144,7 @@ pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
         for _ in 0..PATH_BATCH_SIZE {
             match walker.next() {
                 Some(Ok(entry)) => batch.push(entry),
-                Some(Err(e)) => panic!("Critical: Failed to traverse directory: {}", e),
+                Some(Err(e)) => panic!("Critical: Failed to traverse directory: {e}"),
                 None => break,
             }
         }

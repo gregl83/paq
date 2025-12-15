@@ -19,11 +19,11 @@ The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb
 
 | Tool                       | Version | Command                   |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
 | :------------------------- | :------ | :------------------------ | ------------: | -------: | -------: | -----------: |
-| [paq][paq]                 | latest  | `paq ./go`                |   100.8 ± 0.9 |     99.6 |    103.3 |         1.00 |
-| [b3sum][b3sum]             | 1.5.1   | `find ./go ... b3sum`     |   322.4 ± 4.3 |    317.2 |    328.8 |  3.20 ± 0.05 |
-| [dirhash][dirhash]         | 0.5.0   | `dirhash -a sha256 ./go`  |   578.6 ± 5.7 |    568.3 |    585.6 |  5.74 ± 0.08 |
-| [GNU sha2][gnusha]         | 9.7     | `find ./go ... sha256sum` |  755.2 ± 32.1 |    705.5 |    793.1 |  7.49 ± 0.33 |
-| [folder-hash][folder-hash] | 4.1.1   | `folder-hash ./go`        | 1912.0 ± 49.0 |   1873.0 |   2020.0 | 18.96 ± 0.51 |
+| [paq][paq]                 | latest  | `paq ./go`                |    77.7 ± 0.6 |     77.1 |     80.2 |         1.00 |
+| [b3sum][b3sum]             | 1.5.1   | `find ./go ... b3sum`     |   327.3 ± 3.6 |    320.2 |    332.3 |  4.21 ± 0.05 |
+| [dirhash][dirhash]         | 0.5.0   | `dirhash -a sha256 ./go`  |   576.1 ± 2.9 |    570.8 |    580.3 |  7.41 ± 0.06 |
+| [GNU sha2][gnusha]         | 9.7     | `find ./go ... sha256sum` |  725.2 ± 43.5 |    692.2 |    813.2 |  9.33 ± 0.56 |
+| [folder-hash][folder-hash] | 4.1.1   | `folder-hash ./go`        | 1906.0 ± 78.0 |   1810.0 |   2029.0 | 24.53 ± 1.02 |
 
 [paq]: https://github.com/gregl83/paq
 [b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
@@ -144,10 +144,9 @@ Additionally, files or directory contents starting with dot or full stop _can_ o
 
 ## How it Works
 
-1. Recursively get path(s) for a given source argument.
-2. Hash each path and file contents if path is to a file.
-3. Sort the list of hashes for consistent ordering.
-4. Compute the final hash by hashing the list of hashes.
+1. **Stream & Hash:** Recursively discovers source system path(s) and hashes them in a parallel pipeline.
+2. **Sort:** Orders the hashes to ensure a deterministic output.
+3. **Finalize:** Computes the final hash by hashing the list of hashes.
 
 ## License
 
