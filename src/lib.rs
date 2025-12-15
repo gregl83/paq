@@ -1,10 +1,7 @@
 use std::{
     fs,
     io::prelude::*,
-    path::{
-        Path,
-        PathBuf,
-    },
+    path::Path,
 };
 
 pub use arrayvec::ArrayString;
@@ -14,6 +11,7 @@ use rayon::prelude::*;
 use walkdir::{DirEntry, WalkDir};
 
 
+pub const PATH_BATCH_SIZE: usize = 50;
 pub const MAX_FILE_SIZE_FOR_UNBUFFERED_READ: u64 = 1024 + 1;
 #[cfg(not(target_os = "windows"))]
 pub const MIN_FILE_SIZE_FOR_MMAP_READ: u64 = 1024 * 1024 - 1;
@@ -42,30 +40,6 @@ fn filter(ignore_hidden: bool) -> impl FnMut(&DirEntry) -> bool {
     }
 }
 
-fn get_paths(root: &Path, ignore_hidden: bool) -> Vec<PathBuf> {
-    WalkDir::new(root)
-        .follow_links(false)
-        .into_iter()
-        .filter_entry(filter(ignore_hidden))
-        .par_bridge() // Convert the iterator to a parallel iterator
-        .fold(
-            Vec::new,
-            |mut acc, entry| {
-                if let Ok(entry) = entry {
-                    acc.push(entry.into_path());
-                }
-                acc
-            },
-        )
-        .reduce(
-            Vec::new,
-            |mut paths_a, paths_b| {
-                paths_a.extend(paths_b);
-                paths_a
-            },
-        )
-}
-
 fn buffer_file_to_hasher(hasher: &mut Hasher, path: &str) {
     let mut file = fs::File::open(path).unwrap();
     let mut buffer = [0; FILE_BUFFER_SIZE];
@@ -76,10 +50,10 @@ fn buffer_file_to_hasher(hasher: &mut Hasher, path: &str) {
     }
 }
 
-fn hash_path(root: &Path, path: PathBuf) -> [u8; 32] {
+fn hash_path(root: &Path, path: &Path) -> [u8; 32] {
     let mut hasher = Hasher::new();
     let source_path = path.strip_prefix(root).unwrap().to_str().unwrap();
-    // hash  paths for fs changes other than file content (must be relative to root)
+    // hash paths for fs changes other than file content (must be relative to root)
     #[cfg(target_family = "unix")]
     {
         hasher.update(source_path.as_bytes());
@@ -115,11 +89,11 @@ fn hash_path(root: &Path, path: PathBuf) -> [u8; 32] {
             return *hasher.finalize().as_bytes();
         } else if file_size < MAX_FILE_SIZE_FOR_UNBUFFERED_READ {
             // small file read using unbuffered
-            let file = fs::read(&path).unwrap();
+            let file = fs::read(path).unwrap();
             hasher.update(&file);
         } else if file_size > MIN_FILE_SIZE_FOR_MMAP_READ {
             // large size files read using mmap or fail to buffered read
-            let file = fs::File::open(&path).unwrap();
+            let file = fs::File::open(path).unwrap();
             match unsafe { Mmap::map(&file) } {
                 Ok(mmap) => { hasher.update(&mmap); },
                 Err(_) => { buffer_file_to_hasher(&mut hasher, relative_path); },
@@ -130,16 +104,6 @@ fn hash_path(root: &Path, path: PathBuf) -> [u8; 32] {
         }
     }
     *hasher.finalize().as_bytes()
-}
-
-fn hash_paths(root: &Path, paths: Vec<PathBuf>) -> Vec<[u8; 32]> {
-    let mut hashes: Vec<_> = paths
-        .into_par_iter()
-        .map(|path| hash_path(root, path))
-        .collect();
-    // parallel sort using default rayon MAX_SEQUENTIAL threshold (2k items)
-    hashes.par_sort_unstable();
-    hashes
 }
 
 fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
@@ -168,7 +132,36 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
 /// assert_eq!(&source_hash[..], "d7d25c9b2fdb7391e650085a985ad0d892c7f0dd5edd32c7ccdb4b0d1c34c430");
 /// ```
 pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
-    let paths = get_paths(source, ignore_hidden);
-    let hashes = hash_paths(source, paths);
+    // construct file system walker
+    let mut walker = WalkDir::new(source)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(filter(ignore_hidden));
+
+    // construct iterator that retrieves system path batches using walker
+    let batch_iter = std::iter::from_fn(move || {
+        let mut batch = Vec::with_capacity(PATH_BATCH_SIZE);
+        for _ in 0..PATH_BATCH_SIZE {
+            match walker.next() {
+                Some(Ok(entry)) => batch.push(entry),
+                Some(Err(e)) => panic!("Critical: Failed to traverse directory: {e}"),
+                None => break,
+            }
+        }
+        if batch.is_empty() { None } else { Some(batch) }
+    });
+
+    // run hashing pipeline using parallel batching
+    let mut hashes: Vec<[u8; 32]> = batch_iter
+        .par_bridge()
+        .flat_map_iter(|batch| {
+            batch.into_iter().map(|entry| {
+                hash_path(source, entry.path())
+            })
+        })
+        .collect();
+
+    hashes.par_sort_unstable();
+
     get_hashes_root(hashes)
 }
