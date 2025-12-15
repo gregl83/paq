@@ -29,6 +29,22 @@ lto = true
 opt-level = 3
 strip = true
 
+[[bench]]
+name = "hash_by_file_size"
+harness = false
+
+[[bench]]
+name = "hash_list_sort"
+harness = false
+
+[[bench]]
+name = "hash_list_hash"
+harness = false
+
+[[bench]]
+name = "functional"
+harness = false
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -41,6 +57,7 @@ walkdir = "2.5.0"
 
 [dev-dependencies]
 assert_cmd = "2.1.1"
+criterion = "0.8.1"
 
 [features]
 default = ["test-cleanup"]
