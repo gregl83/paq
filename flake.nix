@@ -171,6 +171,28 @@
                       license = benchmarkPkgs.lib.licenses.mit;
                     };
                   };
+                  folderHash = benchmarkPkgs.buildNpmPackage rec {
+                    pname = "folder-hash";
+                    version = "4.1.1";
+
+                    src = benchmarkPkgs.fetchFromGitHub {
+                      owner = "marc136";
+                      repo = "node-folder-hash";
+                      rev = "v${version}";
+                      sha256 = "yU0fx1hkKDILdAxLgXfNOj3vAwoAbHq6y2hvdYnyB8Y=";
+                    };
+
+                    npmDepsHash = "sha256-wVNtiK0j3rIWqtf9AHqkRgCfOiq4cxZRPJU7/ncaCR8=";
+
+                    # Pure JS package, no compile step needed
+                    dontNpmBuild = true;
+
+                    meta = {
+                      description = "Create a hash checksum over a folder and its content";
+                      homepage = "https://github.com/marc136/node-folder-hash";
+                      license = benchmarkPkgs.lib.licenses.mit;
+                    };
+                  };
                 in
                 config.rust-project.crane-lib.devShell {
                   packages =
@@ -186,6 +208,7 @@
                       git
                       bash
                       dirhash
+                      folderHash
                     ]
                     ++ [
                       self'.packages.paq
@@ -199,8 +222,9 @@
                     echo "Package versions:"
                     echo "  - $(hyperfine --version)"
                     echo "  - $(b3sum --version)"
-                    echo "  - dirhash ${dirhash.version}"
                     echo "  - $(sha256sum --version | head -n1)"
+                    echo "  - dirhash ${dirhash.version}"
+                    echo "  - folder-hash ${folderHash.version}"
                     echo "  - $(git --version)"
                     echo ""
                     echo "Run: ./bin/comparison.sh"
