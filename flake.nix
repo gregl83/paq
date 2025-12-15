@@ -227,7 +227,7 @@
                     echo "  - folder-hash ${folderHash.version}"
                     echo "  - $(git --version)"
                     echo ""
-                    echo "Run: ./benches/comparison.sh"
+                    echo "Run: ./bin/comparison.sh"
                   '';
                 };
             };

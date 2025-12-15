@@ -388,7 +388,7 @@ Resources:
 
             # Build and Run benchmark using Nix
             nix build --no-link --print-out-paths
-            nix develop .#benchmark --command bash benches/comparison.sh /mnt/benchmark/target
+            nix develop .#benchmark --command bash bin/comparison.sh /mnt/benchmark/target
           BENCH
 
           if [ "$AUTO_SHUTDOWN" = "true" ]; then
