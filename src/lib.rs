@@ -161,6 +161,7 @@ pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
         })
         .collect();
 
+    // parallel sort using default rayon MAX_SEQUENTIAL threshold (2k items)
     hashes.par_sort_unstable();
 
     get_hashes_root(hashes)
