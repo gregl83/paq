@@ -447,7 +447,7 @@ dependencies = [
 
 [[package]]
 name = "paq"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "arrayvec",
  "assert_cmd",
