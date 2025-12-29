@@ -44,6 +44,14 @@ name = "hash_list_hash"
 harness = false
 
 [[bench]]
+name = "hash_using_jwalk"
+harness = false
+
+[[bench]]
+name = "hash_using_walkdir"
+harness = false
+
+[[bench]]
 name = "functional"
 harness = false
 
@@ -53,13 +61,14 @@ harness = false
 arrayvec = "0.7.6"
 blake3 = "1.8.2"
 clap = { version = "4.5.53", features = ["cargo", "unstable-styles"] }
-jwalk = "0.8.1"
 memmap2 = "0.9.9"
 rayon = "1.11"
+walkdir = "2.5.0"
 
 [dev-dependencies]
 assert_cmd = "2.1.1"
 criterion = "0.8.1"
+jwalk = "0.8.1"
 
 [features]
 default = ["test-cleanup"]

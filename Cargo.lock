@@ -457,6 +457,7 @@ dependencies = [
  "jwalk",
  "memmap2",
  "rayon",
+ "walkdir",
 ]
 
 [[package]]
