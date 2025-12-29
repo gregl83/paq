@@ -40,14 +40,14 @@ jobs:
             architecture: x86
             target: i686-pc-windows-msvc
 
-          # --- macOS ---
-          - os: macos-13
-            architecture: x64
-            target: x86_64-apple-darwin
-          # --- Apple Silicon ---
+          # --- macOS Apple Silicon ---
           - os: macos-latest
             architecture: arm64
             target: aarch64-apple-darwin
+          # --- macOS Intel ---
+          - os: macos-latest
+            architecture: x64
+            target: x86_64-apple-darwin
     steps:
       - uses: actions/checkout@v6
 
@@ -118,14 +118,14 @@ jobs:
             architecture: x86
             target: i686-pc-windows-msvc
 
-          # --- macOS ---
-          - os: macos-13
-            architecture: x64
-            target: x86_64-apple-darwin
-          # --- Apple Silicon ---
+          # --- macOS Apple Silicon ---
           - os: macos-latest
             architecture: arm64
             target: aarch64-apple-darwin
+          # --- macOS Intel ---
+          - os: macos-latest
+            architecture: x64
+            target: x86_64-apple-darwin
     steps:
       - uses: actions/checkout@v6
 
@@ -175,14 +175,14 @@ jobs:
             architecture: x86
             target: i686-pc-windows-msvc
 
-          # --- macOS ---
-          - os: macos-13
-            architecture: x64
-            target: x86_64-apple-darwin
-          # --- Apple Silicon ---
+          # --- macOS Apple Silicon ---
           - os: macos-latest
             architecture: arm64
             target: aarch64-apple-darwin
+          # --- macOS Intel ---
+          - os: macos-latest
+            architecture: x64
+            target: x86_64-apple-darwin
     permissions:
       contents: write
     steps:
