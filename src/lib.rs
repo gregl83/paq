@@ -14,7 +14,7 @@ use walkdir::{
 };
 
 
-pub const PATH_BATCH_SIZE: usize = 50;
+pub const PATH_BATCH_SIZE: usize = 100;
 pub const MAX_FILE_SIZE_FOR_UNBUFFERED_READ: u64 = 1024 + 1;
 #[cfg(not(target_os = "windows"))]
 pub const MIN_FILE_SIZE_FOR_MMAP_READ: u64 = 1024 * 1024 - 1;
@@ -53,8 +53,9 @@ fn buffer_file_to_hasher(hasher: &mut Hasher, path: &str) {
     }
 }
 
-fn hash_path(root: &Path, path: &Path) -> [u8; 32] {
+fn hash_path(root: &Path, entry: &DirEntry) -> [u8; 32] {
     let mut hasher = Hasher::new();
+    let path = entry.path();
     let source_path = path.strip_prefix(root).unwrap().to_str().unwrap();
     // hash paths for fs changes other than file content (must be relative to root)
     #[cfg(target_family = "unix")]
@@ -66,7 +67,7 @@ fn hash_path(root: &Path, path: &Path) -> [u8; 32] {
         hasher.update(source_path.replace("\\", "/").as_bytes());
     }
     let relative_path = path.as_os_str().to_str().unwrap();
-    let metadata = fs::symlink_metadata(relative_path).unwrap();
+    let metadata = entry.metadata().unwrap();
     if metadata.is_symlink() {
         // for symlinks add hash of target path
         let symlink_target = fs::read_link(relative_path).unwrap();
@@ -159,7 +160,7 @@ pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
         .par_bridge()
         .flat_map_iter(|batch| {
             batch.into_iter().map(|entry| {
-                hash_path(source, entry.path())
+                hash_path(source, &entry)
             })
         })
         .collect();

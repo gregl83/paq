@@ -7,7 +7,7 @@ use std::{
     hint::black_box,
     time::Duration,
 };
-use std::path::PathBuf;
+
 pub use arrayvec::ArrayString;
 use blake3::Hasher;
 use criterion::{
@@ -31,7 +31,7 @@ Benchmark uses mirror of lib from v1.4.0 for the sake of reproducibility.
 */
 
 
-pub const PATH_BATCH_SIZE: usize = 50;
+pub const PATH_BATCH_SIZE: usize = 100;
 pub const MAX_FILE_SIZE_FOR_UNBUFFERED_READ: u64 = 1024 + 1;
 #[cfg(not(target_os = "windows"))]
 pub const MIN_FILE_SIZE_FOR_MMAP_READ: u64 = 1024 * 1024 - 1;
@@ -198,7 +198,7 @@ fn bench_paq_walkdir_library(c: &mut Criterion) {
         "bench_hashes_directory_files"
     ).unwrap();
 
-    for i in 0..100 {
+    for i in 0..1000 {
         dir.new_file(
             format!("{i}").as_str(),
             format!("{i}-body").as_bytes()

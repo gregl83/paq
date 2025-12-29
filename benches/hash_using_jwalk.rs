@@ -7,7 +7,7 @@ use std::{
     hint::black_box,
     time::Duration,
 };
-use std::path::PathBuf;
+
 pub use arrayvec::ArrayString;
 use blake3::Hasher;
 use criterion::{
@@ -31,7 +31,7 @@ Benchmark uses refactor of lib mirror from v1.4.0 for the sake of reproducibilit
 */
 
 
-pub const PATH_BATCH_SIZE: usize = 50;
+pub const PATH_BATCH_SIZE: usize = 100;
 pub const MAX_FILE_SIZE_FOR_UNBUFFERED_READ: u64 = 1024 + 1;
 #[cfg(not(target_os = "windows"))]
 pub const MIN_FILE_SIZE_FOR_MMAP_READ: u64 = 1024 * 1024 - 1;
@@ -144,13 +144,26 @@ pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
         .skip_hidden(ignore_hidden)
         .follow_links(false);
 
-    // stream file system paths to rayon hashing tasks
-    let mut hashes: Vec<[u8; 32]> = walker
-        .into_iter()
+    // construct iterator that retrieves system path batches using walker
+    let mut walker_iter = walker.into_iter();
+    let batch_iter = std::iter::from_fn(move || {
+        let mut batch = Vec::with_capacity(PATH_BATCH_SIZE);
+        for _ in 0..PATH_BATCH_SIZE {
+            match walker_iter.next() {
+                Some(Ok(entry)) => batch.push(entry),
+                Some(Err(e)) => panic!("Critical: Failed to traverse directory: {e}"),
+                None => break,
+            }
+        }
+        if batch.is_empty() { None } else { Some(batch) }
+    });
+
+    // run hashing pipeline using parallel batching
+    let mut hashes: Vec<[u8; 32]> = batch_iter
         .par_bridge()
-        .map(|entry| {
-            let entry = entry.expect("Critical: Failed to read directory entry.");
-            hash_path(source, &entry)
+        .flat_map_iter(|batch| {
+            // process the whole batch (low lock contention)
+            batch.into_iter().map(|entry| hash_path(source, &entry))
         })
         .collect();
 
@@ -172,7 +185,7 @@ fn bench_paq_jwalk_library(c: &mut Criterion) {
         "bench_hashes_directory_files"
     ).unwrap();
 
-    for i in 0..100 {
+    for i in 0..1000 {
         dir.new_file(
             format!("{i}").as_str(),
             format!("{i}-body").as_bytes()
