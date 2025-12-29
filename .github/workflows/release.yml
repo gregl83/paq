@@ -71,6 +71,9 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         architecture: [x64, x86]
         toolchain: [stable]
+    env:
+      PGO_DATA_REPO_HASH: "6e676ab2b809d46623acb5988248d95d1eb7939c"
+      PGO_DATA_PATH: ${{ github.workspace }}/pgo_data
     steps:
       - uses: actions/checkout@v6
 
