@@ -1,9 +1,8 @@
 name: release
 
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [published]
 
 env:
   CARGO_TERM_COLOR: always
@@ -24,14 +23,48 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        architecture: [x64, x86]
-        toolchain: [stable]
+        include:
+          # --- Linux ---
+          - os: ubuntu-latest
+            architecture: x64
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            architecture: x86
+            target: i686-unknown-linux-gnu
+
+          # --- Windows ---
+          - os: windows-latest
+            architecture: x64
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            architecture: x86
+            target: i686-pc-windows-msvc
+
+          # --- macOS Apple Silicon ---
+          - os: macos-latest
+            architecture: arm64
+            target: aarch64-apple-darwin
+          # --- macOS Intel ---
+          - os: macos-latest
+            architecture: x64
+            target: x86_64-apple-darwin
     steps:
       - uses: actions/checkout@v6
 
+      - name: Install Rust Toolchain
+        run: |
+          rustup set profile minimal
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup component add llvm-tools-preview
+          rustup target add ${{ matrix.target }}
+
+      - name: Install 32-bit Support
+        if: matrix.target == 'i686-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -y gcc-multilib
+
       - name: Run Tests
-        run: cargo test --verbose -- --nocapture
+        run: cargo test --target ${{ matrix.target }} --verbose -- --nocapture
 
   cover:
     runs-on: ubuntu-latest
@@ -68,20 +101,54 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        architecture: [x64, x86]
-        toolchain: [stable]
+        include:
+          # --- Linux ---
+          - os: ubuntu-latest
+            architecture: x64
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            architecture: x86
+            target: i686-unknown-linux-gnu
+
+          # --- Windows ---
+          - os: windows-latest
+            architecture: x64
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            architecture: x86
+            target: i686-pc-windows-msvc
+
+          # --- macOS Apple Silicon ---
+          - os: macos-latest
+            architecture: arm64
+            target: aarch64-apple-darwin
+          # --- macOS Intel ---
+          - os: macos-latest
+            architecture: x64
+            target: x86_64-apple-darwin
     steps:
       - uses: actions/checkout@v6
 
+      - name: Install Rust Toolchain
+        run: |
+          rustup set profile minimal
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup component add llvm-tools-preview
+          rustup target add ${{ matrix.target }}
+
+      - name: Install 32-bit Support
+        if: matrix.target == 'i686-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -y gcc-multilib
+
       - name: Build
-        run: cargo build --release --verbose
+        run: cargo build --target ${{ matrix.target }} --release --verbose
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.os }}-${{ matrix.architecture }}
-          path: target/release/
+          path: target/${{ matrix.target }}/release/
 
   release:
     needs:
@@ -91,9 +158,31 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        architecture: [x64, x86]
-        toolchain: [stable]
+        include:
+          # --- Linux ---
+          - os: ubuntu-latest
+            architecture: x64
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            architecture: x86
+            target: i686-unknown-linux-gnu
+
+          # --- Windows ---
+          - os: windows-latest
+            architecture: x64
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            architecture: x86
+            target: i686-pc-windows-msvc
+
+          # --- macOS Apple Silicon ---
+          - os: macos-latest
+            architecture: arm64
+            target: aarch64-apple-darwin
+          # --- macOS Intel ---
+          - os: macos-latest
+            architecture: x64
+            target: x86_64-apple-darwin
     permissions:
       contents: write
     steps:
@@ -101,35 +190,39 @@ jobs:
 
       - name: Download Artifacts
         uses: actions/download-artifact@v7
+        with:
+          name: ${{ matrix.os }}-${{ matrix.architecture }}
+          path: ${{ matrix.os }}-${{ matrix.architecture }}
 
       - name: Set Build File Variables
         id: vars
         run: |
           name=$(awk -F '= ' '/^\[package\]/{found=1} found && /^name/{gsub(/["]/, "", $2); print $2; exit}' Cargo.toml)
-          echo "name=$name" >> $GITHUB_OUTPUT
-          os="${{ matrix.os }}"
-          os_sans_latest=$(echo "$os" | sed 's/-latest//')
-          echo "os=$os_sans_latest" >> $GITHUB_OUTPUT
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            echo "ext=.exe" >> $GITHUB_OUTPUT
+          case "${{ matrix.os }}" in
+            *"ubuntu"*)  os="ubuntu" ;;
+            *"windows"*) os="windows" ;;
+            *"macos"*)   os="macos" ;;
+          esac
+          if [[ "$os" == "windows" ]]; then
+            ext=".exe"
           else
-            echo "ext=" >> $GITHUB_OUTPUT
+            ext=""
           fi
+          echo "name=$name" >> $GITHUB_OUTPUT
+          echo "os=$os" >> $GITHUB_OUTPUT
+          echo "ext=$ext" >> $GITHUB_OUTPUT
 
       - name: Prepare Artifacts
         run: |
-          source=${{ matrix.os }}-${{ matrix.architecture }}/${{ steps.vars.outputs.name }}${{ steps.vars.outputs.ext }}
+          source=$(find ${{ matrix.os }}-${{ matrix.architecture }} -name "${{ steps.vars.outputs.name }}${{ steps.vars.outputs.ext }}" -type f | head -n 1)
           binary=paq${{ steps.vars.outputs.ext }}
           archive=${{ steps.vars.outputs.name }}-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}.zip
-          mv $source $binary
-          zip $archive $binary
+          mv "$source" "$binary"
+          zip "$archive" "$binary"
 
-      - name: Create Release
+      - name: Upload Artifact to Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
-          draft: false
-          prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             ${{ steps.vars.outputs.name }}-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}.zip

@@ -1,18 +1,34 @@
+mod utils;
+
 use std::{
     fs,
     io::prelude::*,
-    iter,
     path::Path,
+    hint::black_box,
+    time::Duration,
 };
 
 pub use arrayvec::ArrayString;
 use blake3::Hasher;
+use criterion::{
+    Criterion,
+    criterion_group,
+    criterion_main,
+};
 use memmap2::Mmap;
 use rayon::prelude::*;
 use walkdir::{
     DirEntry,
     WalkDir,
 };
+
+use utils::TempDir;
+
+/*
+IMPORTANT:
+
+Benchmark uses mirror of lib from v1.4.0 for the sake of reproducibility.
+*/
 
 
 pub const PATH_BATCH_SIZE: usize = 100;
@@ -44,7 +60,7 @@ fn filter(ignore_hidden: bool) -> impl FnMut(&DirEntry) -> bool {
     }
 }
 
-fn buffer_file_to_hasher(hasher: &mut Hasher, path: &Path) {
+fn buffer_file_to_hasher(hasher: &mut Hasher, path: &str) {
     let mut file = fs::File::open(path).unwrap();
     let mut buffer = [0; FILE_BUFFER_SIZE];
     loop {
@@ -54,12 +70,9 @@ fn buffer_file_to_hasher(hasher: &mut Hasher, path: &Path) {
     }
 }
 
-fn hash_path(root: &Path, entry: &DirEntry) -> [u8; 32] {
-    let path = entry.path();
-    let source_path = path.strip_prefix(root).unwrap().to_str().unwrap();
-    let source_type = entry.file_type();
-
+fn hash_path(root: &Path, path: &Path) -> [u8; 32] {
     let mut hasher = Hasher::new();
+    let source_path = path.strip_prefix(root).unwrap().to_str().unwrap();
     // hash paths for fs changes other than file content (must be relative to root)
     #[cfg(target_family = "unix")]
     {
@@ -69,9 +82,11 @@ fn hash_path(root: &Path, entry: &DirEntry) -> [u8; 32] {
     {
         hasher.update(source_path.replace("\\", "/").as_bytes());
     }
-    if source_type.is_symlink() {
+    let relative_path = path.as_os_str().to_str().unwrap();
+    let metadata = fs::symlink_metadata(relative_path).unwrap();
+    if metadata.is_symlink() {
         // for symlinks add hash of target path
-        let symlink_target = fs::read_link(path).unwrap();
+        let symlink_target = fs::read_link(relative_path).unwrap();
         #[cfg(target_family = "unix")]
         {
             hasher.update(symlink_target.to_str().unwrap().as_bytes());
@@ -86,9 +101,8 @@ fn hash_path(root: &Path, entry: &DirEntry) -> [u8; 32] {
                     .as_bytes(),
             );
         }
-    } else if source_type.is_file() {
+    } else if metadata.is_file() {
         // for files, add contents to hasher
-        let metadata = entry.metadata().unwrap();
         let file_size = metadata.len();
         if file_size == 0 {
             // empty file, return immediately
@@ -102,11 +116,11 @@ fn hash_path(root: &Path, entry: &DirEntry) -> [u8; 32] {
             let file = fs::File::open(path).unwrap();
             match unsafe { Mmap::map(&file) } {
                 Ok(mmap) => { hasher.update(&mmap); },
-                Err(_) => { buffer_file_to_hasher(&mut hasher, path) ; },
+                Err(_) => { buffer_file_to_hasher(&mut hasher, relative_path); },
             }
         } else {
             // medium file size read using buffer
-            buffer_file_to_hasher(&mut hasher, path);
+            buffer_file_to_hasher(&mut hasher, relative_path);
         }
     }
     *hasher.finalize().as_bytes()
@@ -145,7 +159,7 @@ pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
         .filter_entry(filter(ignore_hidden));
 
     // construct iterator that retrieves system path batches using walker
-    let batch_iter = iter::from_fn(move || {
+    let batch_iter = std::iter::from_fn(move || {
         let mut batch = Vec::with_capacity(PATH_BATCH_SIZE);
         for _ in 0..PATH_BATCH_SIZE {
             match walker.next() {
@@ -162,7 +176,7 @@ pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
         .par_bridge()
         .flat_map_iter(|batch| {
             batch.into_iter().map(|entry| {
-                hash_path(source, &entry)
+                hash_path(source, entry.path())
             })
         })
         .collect();
@@ -172,3 +186,40 @@ pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
 
     get_hashes_root(hashes)
 }
+
+fn bench_paq_walkdir_library(c: &mut Criterion) {
+    let mut group = c.benchmark_group(
+        "hash_source_using_walkdir",
+    );
+    group.warm_up_time(Duration::from_secs(2));
+    group.measurement_time(Duration::from_secs(10));
+
+    let dir = TempDir::new(
+        "bench_hashes_directory_files"
+    ).unwrap();
+
+    for i in 0..1000 {
+        dir.new_file(
+            format!("{i}").as_str(),
+            format!("{i}-body").as_bytes()
+        ).unwrap()
+    }
+
+    let source = dir.path().canonicalize().unwrap();
+
+    group.bench_with_input(
+        "hashes_directory_with_files",
+        &source,
+        |b, source| {
+            b.iter(|| hash_source(
+                black_box(source),
+                false
+            ))
+        },
+    );
+
+    group.finish();
+}
+
+criterion_group!(benches, bench_paq_walkdir_library);
+criterion_main!(benches);

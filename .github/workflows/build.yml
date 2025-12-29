@@ -8,6 +8,15 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  all-go:
+    name: all systems go
+    runs-on: ubuntu-latest
+    needs:
+      - static-analysis
+      - test
+    steps:
+      - run: exit 0
+
   static-analysis:
     runs-on: ubuntu-latest
     steps:
@@ -19,20 +28,44 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        architecture: [x64, x86]
-        toolchain: [stable]
+        include:
+          # --- Linux ---
+          - os: ubuntu-latest
+            architecture: x64
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            architecture: x86
+            target: i686-unknown-linux-gnu
+
+          # --- Windows ---
+          - os: windows-latest
+            architecture: x64
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            architecture: x86
+            target: i686-pc-windows-msvc
+
+          # --- macOS Apple Silicon ---
+          - os: macos-latest
+            architecture: arm64
+            target: aarch64-apple-darwin
+          # --- macOS Intel ---
+          - os: macos-latest
+            architecture: x64
+            target: x86_64-apple-darwin
     needs:
       - static-analysis
     steps:
       - uses: actions/checkout@v6
+      - name: Install Rust Toolchain
+        run: |
+          rustup set profile minimal
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup component add llvm-tools-preview
+          rustup target add ${{ matrix.target }}
+      - name: Install 32-bit Support
+        if: matrix.target == 'i686-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -y gcc-multilib
       - name: Run Tests
-        run: cargo test --verbose -- --nocapture
-
-  all-go:
-    name: all systems go
-    runs-on: ubuntu-latest
-    needs:
-      - test
-    steps:
-      - run: exit 0
+        run: cargo test --target ${{ matrix.target }} --verbose -- --nocapture
