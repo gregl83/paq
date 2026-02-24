@@ -60,7 +60,7 @@ harness = false
 [dependencies]
 arrayvec = "0.7.6"
 blake3 = "1.8.3"
-clap = { version = "4.5.59", features = ["cargo", "unstable-styles"] }
+clap = { version = "4.5.60", features = ["cargo", "unstable-styles"] }
 memmap2 = "0.9.10"
 rayon = "1.11"
 walkdir = "2.5.0"
