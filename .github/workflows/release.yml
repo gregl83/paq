@@ -86,7 +86,7 @@ jobs:
         run: cargo llvm-cov --all-features --workspace --fail-under-functions 80 --fail-under-lines 80 --fail-under-regions 80 --lcov --output-path ./target/lcov.info
 
       - name: Publish Coverage Report
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
