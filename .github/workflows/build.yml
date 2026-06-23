@@ -20,7 +20,7 @@ jobs:
   static-analysis:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31.10.6
       - run: nix flake check --print-build-logs
 
@@ -56,7 +56,7 @@ jobs:
     needs:
       - static-analysis
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install Rust Toolchain
         run: |
           rustup set profile minimal
