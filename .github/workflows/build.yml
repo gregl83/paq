@@ -91,6 +91,8 @@ jobs:
             target: x86_64-apple-darwin
     needs:
       - static-analysis
+      - cover
+      - package
     steps:
       - uses: actions/checkout@v7
       - name: Install Rust Toolchain
