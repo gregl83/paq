@@ -229,13 +229,66 @@ pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
 }
 
 #[cfg(test)]
+#[allow(dead_code)]
 mod tests {
+    fn test_directory(name: &str) -> super::PathBuf {
+        let path = std::env::temp_dir().join("paq").join(name);
+        if path.exists() {
+            super::fs::remove_dir_all(&path).unwrap();
+        }
+        super::fs::create_dir_all(&path).unwrap();
+        path
+    }
+
+    fn file_entry(path: &super::Path) -> super::DirEntry {
+        super::WalkDir::new(path.parent().unwrap())
+            .into_iter()
+            .find_map(|entry| {
+                let entry = entry.unwrap();
+                (entry.path() == path).then_some(entry)
+            })
+            .unwrap()
+    }
+
+    #[test]
+    fn it_hashes_files_by_size() {
+        let file_sizes = vec![
+            ("empty", 0),
+            ("buffered", super::MAX_FILE_SIZE_FOR_UNBUFFERED_READ),
+        ];
+        #[cfg(not(target_os = "windows"))]
+        let file_sizes = {
+            let mut file_sizes = file_sizes;
+            file_sizes.push(("memory-mapped", super::MIN_FILE_SIZE_FOR_MMAP_READ + 1));
+            file_sizes
+        };
+        let dir = test_directory("it_hashes_files_by_size");
+
+        for (file_name, file_size) in file_sizes {
+            let file_contents = vec![0; file_size as usize];
+            let path = dir.join(file_name);
+            super::fs::write(&path, &file_contents).unwrap();
+            let entry = file_entry(&path);
+
+            let hash = super::try_hash_path(&dir, &entry).unwrap();
+            let mut hasher = super::Hasher::new();
+            hasher.update(file_name.as_bytes());
+            hasher.update(&file_contents);
+            assert_eq!(hash, *hasher.finalize().as_bytes());
+        }
+
+        super::fs::remove_dir_all(dir).unwrap();
+    }
+
     #[test]
     fn it_returns_io_error_for_missing_path() {
         let path = super::Path::new(env!("CARGO_MANIFEST_DIR")).join("__paq_test_missing_path__");
         let mut hasher = super::Hasher::new();
 
         let error = super::try_buffer_file_to_hasher(&mut hasher, &path).unwrap_err();
+        assert!(error
+            .to_string()
+            .starts_with(format!("failed to access path `{}`:", path.display()).as_str()));
         assert!(matches!(
             error,
             super::Error::Io {
@@ -243,6 +296,24 @@ mod tests {
                 ..
             } if error_path == path
         ));
+    }
+
+    #[cfg(target_family = "unix")]
+    #[test]
+    fn it_returns_io_error_for_directory_read() {
+        let dir = test_directory("it_returns_io_error_for_directory_read");
+        let mut hasher = super::Hasher::new();
+
+        let error = super::try_buffer_file_to_hasher(&mut hasher, &dir).unwrap_err();
+        assert!(matches!(
+            error,
+            super::Error::Io {
+                path: error_path,
+                ..
+            } if error_path == dir
+        ));
+
+        super::fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
@@ -256,6 +327,14 @@ mod tests {
             .unwrap();
 
         let error = super::try_hash_path(&root, &entry).unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            format!(
+                "path `{}` is outside source `{}`",
+                source.display(),
+                root.display()
+            )
+        );
         assert!(matches!(
             error,
             super::Error::OutsideSource {
@@ -263,5 +342,51 @@ mod tests {
                 root: error_root,
             } if error_path == source && error_root == root
         ));
+    }
+
+    #[cfg(target_family = "unix")]
+    #[test]
+    fn it_returns_io_error_for_missing_symlink() {
+        use std::os::unix::fs::symlink;
+
+        let dir = test_directory("it_returns_io_error_for_missing_symlink");
+        let path = dir.join("link");
+        symlink("target", &path).unwrap();
+        let entry = file_entry(&path);
+        super::fs::remove_file(&path).unwrap();
+
+        let error = super::try_hash_path(&dir, &entry).unwrap_err();
+        assert!(matches!(
+            error,
+            super::Error::Io {
+                path: error_path,
+                ..
+            } if error_path == path
+        ));
+
+        super::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn it_returns_error_for_invalid_utf8_symlink() {
+        use std::{
+            ffi::OsString,
+            os::{unix::ffi::OsStringExt, unix::fs::symlink},
+        };
+
+        let dir = test_directory("it_returns_error_for_invalid_utf8_symlink");
+        let target = OsString::from_vec(vec![0xff]);
+        let path = dir.join("link");
+        symlink(&target, &path).unwrap();
+        let entry = file_entry(&path);
+
+        let error = super::try_hash_path(&dir, &entry).unwrap_err();
+        assert!(matches!(
+            error,
+            super::Error::InvalidUtf8Path(error_path) if error_path == target
+        ));
+
+        super::fs::remove_dir_all(dir).unwrap();
     }
 }

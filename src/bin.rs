@@ -134,3 +134,40 @@ fn main() -> anyhow::Result<()> {
     println!("{hash}");
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::TypedValueParser;
+
+    #[test]
+    fn it_rejects_missing_path() {
+        let path = super::Path::new(env!("CARGO_MANIFEST_DIR")).join("__paq_test_missing_path__");
+        let parser = super::PathBufferValueParser {
+            validate_exists: true,
+        };
+        let command = super::Command::new("paq");
+        let argument = super::Arg::new("src");
+
+        let error = parser
+            .parse_ref(&command, Some(&argument), path.as_os_str())
+            .unwrap_err();
+        assert_eq!(error.kind(), super::ErrorKind::InvalidValue);
+    }
+
+    #[test]
+    fn it_returns_error_for_missing_output_source() {
+        let path = super::Path::new(env!("CARGO_MANIFEST_DIR")).join("__paq_test_missing_path__");
+
+        let error = super::derive_output_filepath(&path).unwrap_err();
+        assert_eq!(error.kind(), std::io::ErrorKind::NotFound);
+    }
+
+    #[test]
+    fn it_returns_error_for_root_output_path() {
+        let current = std::env::current_dir().unwrap();
+        let root = current.ancestors().last().unwrap();
+
+        let error = super::derive_output_filepath(root).unwrap_err();
+        assert_eq!(error.kind(), std::io::ErrorKind::Other);
+    }
+}
