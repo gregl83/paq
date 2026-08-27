@@ -178,7 +178,7 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
 /// let ignore_hidden = true;
 /// let source_hash: paq::ArrayString<64> = paq::try_hash_source(&source, ignore_hidden).unwrap();
 ///
-/// assert_eq!(&source_hash[..], "d7d25c9b2fdb7391e650085a985ad0d892c7f0dd5edd32c7ccdb4b0d1c34c430");
+/// assert_eq!(&source_hash[..], "a593d18de8b696c153df9079c662346fafbb555cc4b2bbf5c7e6747e23a24d74");
 /// ```
 pub fn try_hash_source(source: &Path, ignore_hidden: bool) -> Result<ArrayString<64>, Error> {
     // construct file system walker
