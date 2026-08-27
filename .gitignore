@@ -15,3 +15,6 @@ demo.cast
 /.direnv/
 /.pre-commit-config.yaml
 /result
+
+# Agents
+.agent-plans
