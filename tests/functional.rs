@@ -33,7 +33,7 @@ mod lib {
         assert!(matches!(error, paq::Error::Walk(_)));
     }
 
-    #[cfg(target_family = "unix")]
+    #[cfg(target_os = "linux")]
     #[test]
     fn it_returns_error_for_invalid_utf8_path() {
         use std::{
