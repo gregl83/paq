@@ -16,6 +16,7 @@ jobs:
       - cover
       - build
       - release
+      - publish
     steps:
       - run: exit 0
 
@@ -55,7 +56,7 @@ jobs:
         run: |
           rustup set profile minimal
           rustup toolchain install stable --profile minimal
-          rustup default stable
+          rustup override set stable
           rustup component add llvm-tools-preview
           rustup target add ${{ matrix.target }}
 
@@ -71,11 +72,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: llvm-tools-preview
+      - name: Install Rust Toolchain
+        run: |
+          rustup set profile minimal
+          rustup toolchain install stable --profile minimal
+          rustup override set stable
+          rustup component add llvm-tools-preview
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@v2.86.5
@@ -133,7 +135,7 @@ jobs:
         run: |
           rustup set profile minimal
           rustup toolchain install stable --profile minimal
-          rustup default stable
+          rustup override set stable
           rustup component add llvm-tools-preview
           rustup target add ${{ matrix.target }}
 
@@ -208,9 +210,11 @@ jobs:
           else
             ext=""
           fi
-          echo "name=$name" >> $GITHUB_OUTPUT
-          echo "os=$os" >> $GITHUB_OUTPUT
-          echo "ext=$ext" >> $GITHUB_OUTPUT
+          {
+            echo "name=$name"
+            echo "os=$os"
+            echo "ext=$ext"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Prepare Artifacts
         run: |
@@ -226,3 +230,20 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             ${{ steps.vars.outputs.name }}-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}.zip
+
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust Toolchain
+        run: |
+          rustup set profile minimal
+          rustup toolchain install stable --profile minimal
+          rustup override set stable
+
+      - name: Publish Crate
+        run: cargo publish --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

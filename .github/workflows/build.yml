@@ -14,6 +14,7 @@ jobs:
     needs:
       - static-analysis
       - cover
+      - package
       - test
     steps:
       - run: exit 0
@@ -34,7 +35,7 @@ jobs:
         run: |
           rustup set profile minimal
           rustup toolchain install stable --profile minimal
-          rustup default stable
+          rustup override set stable
           rustup component add llvm-tools-preview
 
       - name: Install cargo-llvm-cov
@@ -44,6 +45,20 @@ jobs:
 
       - name: Check Code Coverage
         run: cargo llvm-cov --all-features --workspace --fail-under-functions 80 --fail-under-lines 80 --fail-under-regions 80
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust Toolchain
+        run: |
+          rustup set profile minimal
+          rustup toolchain install stable --profile minimal
+          rustup override set stable
+
+      - name: Check Package
+        run: cargo publish --dry-run --locked
 
   test:
     runs-on: ${{ matrix.os }}
@@ -82,7 +97,7 @@ jobs:
         run: |
           rustup set profile minimal
           rustup toolchain install stable --profile minimal
-          rustup default stable
+          rustup override set stable
           rustup component add llvm-tools-preview
           rustup target add ${{ matrix.target }}
       - name: Install 32-bit Support
