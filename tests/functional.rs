@@ -221,6 +221,87 @@ mod bin {
     use std::path::PathBuf;
 
     #[test]
+    fn it_outputs_directory_hash_using_default_source() {
+        let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+
+        let dir = TempDir::new("it_outputs_directory_hash_using_default_source").unwrap();
+
+        let mut cmd = Command::new(cargo_bin!("paq"));
+        let assert = cmd
+            .current_dir(dir.path())
+            .assert();
+        assert
+            .code(0)
+            .stdout(format!("{expectation}\n"))
+            .success();
+    }
+
+    #[test]
+    fn it_outputs_file_hash_without_output() {
+        let expectation = "48ec422c86fd2aa1ac182f832c10cf6cb07e4b89d88b83a7794bd8773460072c";
+
+        let file_name = "alpha";
+        let file_contents = "alpha-body".as_bytes();
+        let hash_file_name = "alpha.paq";
+        let dir = TempDir::new("it_outputs_file_hash_without_output").unwrap();
+        dir.new_file(file_name, file_contents).unwrap();
+        let source = dir.path().join(file_name);
+
+        let mut cmd = Command::new(cargo_bin!("paq"));
+        let assert = cmd
+            .arg(source.as_os_str().to_str().unwrap())
+            .assert();
+        assert
+            .code(0)
+            .stdout(format!("{expectation}\n"))
+            .success();
+
+        assert!(!dir.path().join(hash_file_name).exists());
+    }
+
+    #[test]
+    fn it_ignores_hidden_files_using_short_arg() {
+        let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+
+        let file_name = ".ignored";
+        let file_contents = ".ignored-body".as_bytes();
+        let dir = TempDir::new("it_ignores_hidden_files_using_short_arg").unwrap();
+        dir.new_file(file_name, file_contents).unwrap();
+        let source = dir.path().canonicalize().unwrap();
+
+        let mut cmd = Command::new(cargo_bin!("paq"));
+        let assert = cmd
+            .arg(source.as_os_str().to_str().unwrap())
+            .arg("-i")
+            .assert();
+        assert
+            .code(0)
+            .stdout(format!("{expectation}\n"))
+            .success();
+    }
+
+    #[test]
+    fn it_ignores_hidden_files_using_long_arg() {
+        let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+
+        let file_name = ".ignored";
+        let file_contents = ".ignored-body".as_bytes();
+        let dir = TempDir::new("it_ignores_hidden_files_using_long_arg").unwrap();
+        dir.new_file(file_name, file_contents).unwrap();
+        let source = dir.path().canonicalize().unwrap();
+
+        let mut cmd = Command::new(cargo_bin!("paq"));
+        let assert = cmd
+            .arg(source.as_os_str().to_str().unwrap())
+            .arg("--ignore-hidden")
+            .assert();
+        assert
+            .code(0)
+            .stdout(format!("{expectation}\n"))
+            .success();
+    }
+
+    #[test]
     fn it_outputs_file_hash_using_default_short_arg() {
         let expectation = "48ec422c86fd2aa1ac182f832c10cf6cb07e4b89d88b83a7794bd8773460072c";
 
@@ -230,6 +311,33 @@ mod bin {
         let dir = TempDir::new("it_outputs_file_hash_using_default_short_arg").unwrap();
         dir.new_file(file_name, file_contents).unwrap();
         let source = dir.path().join(file_name);
+
+        let mut cmd = Command::new(cargo_bin!("paq"));
+        let assert = cmd
+            .arg(source.as_os_str().to_str().unwrap())
+            .arg("-o")
+            .assert();
+        assert
+            .code(0)
+            .stdout(format!("{expectation}\n"))
+            .success();
+
+        let file_hash = dir.read_file(hash_file_name).unwrap();
+        assert_eq!(
+            file_hash.as_slice(),
+            format!("\"{expectation}\"").as_bytes()
+        );
+    }
+
+    #[test]
+    fn it_outputs_directory_hash_using_default_short_arg() {
+        let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+
+        let source_name = "source";
+        let hash_file_name = "source.paq";
+        let dir = TempDir::new("it_outputs_directory_hash_using_default_short_arg").unwrap();
+        let source = dir.path().join(source_name);
+        std::fs::create_dir(&source).unwrap();
 
         let mut cmd = Command::new(cargo_bin!("paq"));
         let assert = cmd
@@ -334,5 +442,59 @@ mod bin {
             file_hash.as_slice(),
             format!("\"{expectation}\"").as_bytes()
         );
+    }
+
+    #[test]
+    fn it_returns_error_for_missing_output_directory() {
+        let file_name = "alpha";
+        let file_contents = "alpha-body".as_bytes();
+        let dir = TempDir::new("it_returns_error_for_missing_output_directory").unwrap();
+        dir.new_file(file_name, file_contents).unwrap();
+        let source = dir.path().join(file_name);
+        let output = dir.path().join("missing").join("alpha.paq");
+
+        let mut cmd = Command::new(cargo_bin!("paq"));
+        let assert = cmd
+            .arg(source.as_os_str().to_str().unwrap())
+            .arg(format!("--out={}", output.as_os_str().to_str().unwrap()))
+            .assert()
+            .failure();
+        let stderr = String::from_utf8_lossy(&assert.get_output().stderr);
+        assert!(stderr.contains("failed to write hash to"));
+    }
+
+    #[test]
+    fn it_rejects_missing_source_arg() {
+        let dir = TempDir::new("it_rejects_missing_source_arg").unwrap();
+        let source = dir.path().join("missing");
+
+        let mut cmd = Command::new(cargo_bin!("paq"));
+        let assert = cmd
+            .arg(source.as_os_str().to_str().unwrap())
+            .assert()
+            .failure();
+        let stderr = String::from_utf8_lossy(&assert.get_output().stderr);
+        assert!(stderr.contains("valid file or directory path"));
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn it_reports_error_for_invalid_utf8_path() {
+        use std::{
+            ffi::OsString,
+            os::unix::ffi::OsStringExt,
+        };
+
+        let dir = TempDir::new("it_reports_error_for_invalid_utf8_path").unwrap();
+        let file_name = OsString::from_vec(vec![0xff]);
+        std::fs::write(dir.path().join(file_name), b"").unwrap();
+
+        let mut cmd = Command::new(cargo_bin!("paq"));
+        let assert = cmd
+            .arg(dir.path().as_os_str().to_str().unwrap())
+            .assert()
+            .failure();
+        let stderr = String::from_utf8_lossy(&assert.get_output().stderr);
+        assert!(stderr.contains("failed to hash"));
     }
 }
