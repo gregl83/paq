@@ -5,11 +5,12 @@
 //! cargo run -- -h
 //! ```
 
+use anyhow::Context;
 use clap::{
     builder::TypedValueParser, crate_description, crate_name, crate_version, error::ContextKind,
     error::ContextValue, error::ErrorKind, Arg, ArgAction, Command,
 };
-use paq::hash_source;
+use paq::try_hash_source;
 use std::{
     fs::File,
     io::{
@@ -58,20 +59,22 @@ impl TypedValueParser for PathBufferValueParser {
     }
 }
 
-fn derive_output_filepath(source: &Path) -> PathBuf {
-    let source_canonical = source.canonicalize().unwrap();
-    let source_filename = source_canonical.file_name().unwrap().to_str().unwrap();
-    let mut path_buffer = PathBuf::from(source_canonical.parent().unwrap());
-    path_buffer.push(format!("{source_filename}.paq"));
-    path_buffer
+fn derive_output_filepath(source: &Path) -> Result<PathBuf, Error> {
+    let source_canonical = source.canonicalize()?;
+    let mut source_filename = source_canonical
+        .file_name()
+        .ok_or_else(|| Error::other("source path has no file name"))?
+        .to_os_string();
+    source_filename.push(".paq");
+    Ok(source_canonical.with_file_name(source_filename))
 }
 
-fn write_hashfile(filepath: &PathBuf, hash: &str) -> Result<(), Error> {
-    let mut file = File::create(filepath).unwrap();
+fn write_hashfile(filepath: &Path, hash: &str) -> Result<(), Error> {
+    let mut file = File::create(filepath)?;
     file.write_all(format!("\"{hash}\"").as_bytes())
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let output_default = "<src>.paq";
     let matches = Command::new(crate_name!())
         .version(crate_version!())
@@ -112,15 +115,22 @@ fn main() {
     let source = matches.get_one::<PathBuf>("src").unwrap();
     let ignore_hidden = matches.get_flag("ignore-hidden");
     let output: Option<&PathBuf> = matches.get_one::<PathBuf>("filepath");
-    let hash = hash_source(source, ignore_hidden);
+    let hash = try_hash_source(source, ignore_hidden)
+        .with_context(|| format!("failed to hash `{}`", source.display()))?;
 
     if let Some(filepath) = output {
-        let output_filepath = match filepath.to_str().unwrap() {
-            s if s == output_default => derive_output_filepath(source),
-            _ => filepath.to_path_buf(),
+        let output_filepath = if filepath.as_path() == Path::new(output_default) {
+            derive_output_filepath(source).with_context(|| {
+                format!("failed to derive output path for `{}`", source.display())
+            })?
+        } else {
+            filepath.to_path_buf()
         };
-        write_hashfile(&output_filepath, hash.as_str()).unwrap();
+        write_hashfile(&output_filepath, hash.as_str()).with_context(|| {
+            format!("failed to write hash to `{}`", output_filepath.display())
+        })?;
     }
 
     println!("{hash}");
+    Ok(())
 }

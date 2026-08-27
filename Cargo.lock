@@ -77,6 +77,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.104"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
+
+[[package]]
 name = "arrayvec"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -450,8 +456,9 @@ dependencies = [
 
 [[package]]
 name = "paq"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
+ "anyhow",
  "arrayvec",
  "assert_cmd",
  "blake3",
