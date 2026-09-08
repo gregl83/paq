@@ -165,3 +165,59 @@ Do not claim cold-cache/storage-bound results without a controlled experiment.
 Set regression budgets from baseline repeatability and workload priorities before
 accepting candidates. Criterion stage speedups alone do not establish an
 end-to-end speedup.
+
+## CPU, memory and elapsed-time measurements on Linux
+
+`bin/resource-measure.c` runs a child through a small native wrapper and records
+`wait4` CPU/user/system time, peak resident memory, faults, context switches and
+block I/O. CPU utilization is `(user + system) / wall * 100`: 100% means one
+logical CPU, so a 16-thread process can exceed 100%. Machine utilization divides
+by the CPUs available to the harness. Peak RSS is in KiB and is a high-water mark,
+not an allocation count or virtual address-space size. The wrapper avoids counting
+a Python parent's pre-exec resident set against short-lived paq processes.
+
+Build both reference and candidate with the same compiler, lockfile and release
+profile, then preserve their artifacts at different paths:
+
+```bash
+cargo build --release --locked --bin paq --example resource_library
+cc -O2 -Wall -Wextra -Werror bin/resource-measure.c -o target/resource-measure
+python3 bin/generate_resource_corpus.py target/resource-corpus --include-go
+```
+
+The corpus generator requires a new destination and Python with tar extraction
+filters when downloading Go. It creates up to 200,000-entry groups, so allow disk
+space and select subsets when needed. Most synthetic file contents repeat a
+deterministic 1 MiB block; the standalone 64 MiB file uses distinct deterministic
+blocks. Do not treat these as general storage/compression benchmarks.
+
+Create a JSON array with the reference first, followed by candidates; each object
+has `name`, `cli`, `library`, and `revision`, where the paths identify the preserved
+release `paq` and `examples/resource_library` executables. Run:
+
+```bash
+python3 bin/resource_bench.py --binaries variants.json \
+  --corpus target/resource-corpus/workloads.json \
+  --helper target/resource-measure --output target/resources.json \
+  --runs 20 --warmups 3 --threads default --modes cli
+python3 bin/resource_bench.py --binaries variants.json \
+  --corpus target/resource-corpus/workloads.json \
+  --helper target/resource-measure --output target/library-resources.json \
+  --runs 5 --warmups 1 --threads default --modes library
+```
+
+Every result is checked against the reference's complete stdout before acceptance.
+Variants run sequentially in shuffled rounds, with no overlapping benchmark child
+processes. Stop compilers and other benchmarks before measurement. Results record
+per-run raw metrics, summary distributions, binary checksums and environment.
+The default workload is a warm filesystem; no global cache eviction is performed.
+Use `--cases` for comma-separated workload names and `--threads default,1,4` for
+thread-count sensitivity. These controls affect the harness, not paq's public CLI.
+
+CLI wall time covers native fork/exec through process completion. In library mode,
+the example first warms paq, then reports loop time for repeated public API calls.
+`loop_per_call_ms` excludes process setup and warmup; CPU time and peak RSS still
+cover the entire batch process, including warmup and checks. CPU per call is therefore
+an amortized upper estimate, not the CPU cost of the isolated timed loop. Report
+these distinctions and measured variability; a microbenchmark win alone does not
+establish an application speedup.

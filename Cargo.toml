@@ -24,6 +24,10 @@ path = "src/lib.rs"
 name = "paq"
 path = "src/bin.rs"
 
+[[example]]
+name = "resource_library"
+path = "benches/resource_library.rs"
+
 [profile.release]
 lto = true
 opt-level = 3
