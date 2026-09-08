@@ -1,24 +1,41 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-if [ -z "$1" ]; then
-  echo "Error: 'before' executable path is required" >&2
+if (( $# < 3 || $# > 4 )) || [[ -z "$1" || -z "$2" || -z "$3" ]]; then
+  echo "Usage: $0 BEFORE AFTER SOURCE [--ignore-hidden|-i]" >&2
   exit 1
 fi
-BEFORE_PAC_PATH="$1"
+before=("$1")
+after=("$2")
+if (( $# == 4 )); then
+  case "$4" in
+    --ignore-hidden|-i) before+=("$4"); after+=("$4") ;;
+    *) echo "Error: only --ignore-hidden or -i is supported as the fourth argument" >&2; exit 1 ;;
+  esac
+fi
+# A relative source beginning with '-' must remain a path.
+before+=(-- "$3")
+after+=(-- "$3")
 
-if [ -z "$2" ]; then
-  echo "Error: 'after' executable path is required" >&2
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/paq-regression.XXXXXXXX")
+trap 'rm -rf -- "$tmp"' EXIT
+if ! "${before[@]}" > "$tmp/before.stdout"; then
+  echo "Error: before executable failed; refusing to benchmark" >&2
   exit 1
 fi
-AFTER_PAC_PATH="$2"
-
-if [ -z "$3" ]; then
-  echo "Error: target data source system path to hash is required" >&2
+if ! "${after[@]}" > "$tmp/after.stdout"; then
+  echo "Error: after executable failed; refusing to benchmark" >&2
   exit 1
 fi
-TARGET_PATH="$3"
+if ! cmp -s "$tmp/before.stdout" "$tmp/after.stdout"; then
+  echo "Error: stdout differs (including newline bytes); refusing to benchmark" >&2
+  exit 1
+fi
 
-hyperfine \
-  -n "[before] ${BEFORE_PAC_PATH}" "${BEFORE_PAC_PATH} ${TARGET_PATH}" \
-  -n "[after] ${AFTER_PAC_PATH}" "${AFTER_PAC_PATH} ${TARGET_PATH}" \
-  --warmup 3
+# Bash's %q preserves quotes, newlines and shell metacharacters. Hyperfine
+# explicitly uses the matching shell to execute these serialized arguments.
+printf -v before_command '%q ' "${before[@]}"
+printf -v after_command '%q ' "${after[@]}"
+hyperfine --shell bash --warmup 3 \
+  -n "[before] $1" "$before_command" \
+  -n "[after] $2" "$after_command"

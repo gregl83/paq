@@ -38,44 +38,41 @@ impl TempDir {
     /// Create a new empty temporary directory under the system's configured
     /// temporary directory.
     pub fn new(name: &str) -> Result<TempDir> {
-        static TRIES: usize = 100;
-
-        let tmpdir = env::temp_dir();
-        for _ in 0..TRIES {
-            let root_path = tmpdir.join(TEMP_DIRECTORY_NAME);
-            let iteration_path = root_path.join(name);
-            if iteration_path.is_dir() {
-                continue;
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        let root = env::temp_dir().join(TEMP_DIRECTORY_NAME);
+        fs::create_dir_all(&root)?;
+        for _ in 0..100 {
+            let id = NEXT.fetch_add(1, Ordering::Relaxed);
+            let path = root.join(format!("{}-{id}-{name}", std::process::id()));
+            match fs::create_dir(&path) {
+                Ok(()) => return Ok(TempDir(path)),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Err(error) => return Err(error.into()),
             }
-            fs::create_dir_all(&iteration_path)
-                .map_err(|e| err!("failed to create {}: {}", iteration_path.display(), e))?;
-            return Ok(TempDir(iteration_path));
         }
-        Err(err!("failed to create temp dir after {} tries", TRIES))
+        Err(err!("failed to create a unique temporary directory"))
     }
 
     /// Create a new file in temporary directory using data of byte array.
     pub fn new_file(&self, name: &str, data: &[u8]) -> Result<()> {
-        let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
+        let file_path = self.path().join(name);
         fs::write(file_path.as_os_str(), data).expect("Unable to write file");
         Ok(())
     }
 
     /// Read a file in temporary directory.
     pub fn read_file(&self, name: &str) -> Result<Vec<u8>> {
-        let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
+        let file_path = self.path().join(name);
         Ok(fs::read(file_path.as_os_str()).expect("Unable to read file"))
     }
 
     /// Create a new symlink in temporary directory to target.
     #[cfg(target_family = "unix")]
     pub fn new_symlink(&self, name: &str, target: PathBuf) -> Result<()> {
-        let symlink_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        symlink(target.as_os_str(), symlink_path.as_os_str())
-        .expect("Unable to create symlink");
-        Ok(
-            (),
-        )
+        let symlink_path = self.path().join(name);
+        symlink(target.as_os_str(), symlink_path.as_os_str()).expect("Unable to create symlink");
+        Ok(())
     }
 
     /// Return the underlying path to this temporary directory.

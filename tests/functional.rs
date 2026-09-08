@@ -168,16 +168,11 @@ mod lib {
         let dir = TempDir::new("it_hashes_directory_with_ignored_subdirectory").unwrap();
         let source = dir.path().canonicalize().unwrap();
 
-        let subdir = TempDir::new("it_hashes_directory_with_ignored_subdirectory/.test").unwrap();
+        std::fs::create_dir(dir.path().join(".test")).unwrap();
         let hash_ignored = paq::hash_source(&source, true);
         assert_eq!(&hash_ignored[..], expectation_ignored);
         let hash_not_ignored = paq::hash_source(&source, false);
         assert_eq!(&hash_not_ignored[..], expectation_not_ignored);
-
-        println!(
-            "prevent early subdir drop for: {}",
-            subdir.path().as_os_str().to_str().unwrap()
-        )
     }
 
     #[test]

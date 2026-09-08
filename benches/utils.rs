@@ -1,18 +1,11 @@
 #![allow(dead_code)]
 
 use std::{
-    cmp,
-    env,
-    error,
+    cmp, env, error, fs,
     io::Write,
-    fs,
-    path::{
-        Path,
-        PathBuf,
-    },
+    path::{Path, PathBuf},
     result,
 };
-
 
 pub const TEMP_DIRECTORY_NAME: &str = "paq";
 
@@ -45,36 +38,34 @@ impl TempDir {
     /// Create a new empty temporary directory under the system's configured
     /// temporary directory.
     pub fn new(name: &str) -> Result<TempDir> {
-        static TRIES: usize = 100;
-
-        let tmpdir = env::temp_dir();
-        for _ in 0..TRIES {
-            let root_path = tmpdir.join(TEMP_DIRECTORY_NAME);
-            let iteration_path = root_path.join(name);
-            if iteration_path.is_dir() {
-                continue;
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        let root = env::temp_dir().join(TEMP_DIRECTORY_NAME);
+        fs::create_dir_all(&root)?;
+        for _ in 0..100 {
+            let id = NEXT.fetch_add(1, Ordering::Relaxed);
+            let path = root.join(format!("{}-{id}-{name}", std::process::id()));
+            match fs::create_dir(&path) {
+                Ok(()) => return Ok(TempDir(path)),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Err(error) => return Err(error.into()),
             }
-            fs::create_dir_all(&iteration_path)
-                .map_err(|e| err!("failed to create {}: {}", iteration_path.display(), e))?;
-            return Ok(TempDir(iteration_path));
         }
-        Err(err!("failed to create temp dir after {} tries", TRIES))
+        Err(err!("failed to create a unique temporary directory"))
     }
 
     /// Create a file in temporary directory using data of byte array.
     pub fn new_file(&self, name: &str, data: &[u8]) -> Result<()> {
-        let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
+        let file_path = self.path().join(name);
         fs::write(file_path.as_os_str(), data)
             .map_err(|e| err!("failed to write data to {}: {}", file_path.display(), e))?;
         Ok(())
     }
 
-    /// Create a file filled with pseudo-random non-zero bytes.
-    ///
-    /// This is critical for benchmarking compression or I/O, as it forces
-    /// actual disk writes and prevents Run-Length Encoding (RLE) optimizations.
+    /// Create deterministic binary data, repeating the same 8 KiB LCG block.
+    /// This is compressible repeated data, not an incompressible I/O fixture.
     pub fn new_file_with_random_data(&self, name: &str, file_size: u64) -> Result<()> {
-        let file_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
+        let file_path = self.path().join(name);
 
         const BUFFER_SIZE: usize = 8 * 1024; // reduce syscalls; 8KB is an efficient page size
         let mut buffer = [0u8; BUFFER_SIZE];
@@ -82,7 +73,7 @@ impl TempDir {
         // fill buffer with pseudo-random noise (avoiding 'rand' dependency)
         let mut state: u32 = 0xDEADBEEF;
         buffer.iter_mut().for_each(|byte| {
-            // Linear Congruential Generator (LCG) step; high entropy
+            // Linear Congruential Generator (LCG) step; deterministic fixture bytes
             state = state.wrapping_mul(1664525).wrapping_add(1013904223);
             *byte = (state >> 24) as u8;
         });
