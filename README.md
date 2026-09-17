@@ -83,7 +83,7 @@ Included in this repository is an [example directory](./example) containing some
 
 Run `paq [src]` to hash source file or directory.
 
-Output hash to `.paq` file as valid JSON.
+Use `-o` or `--out` to output the hash to a `.paq` file as valid JSON.
 
 For help, run `paq --help`.
 
