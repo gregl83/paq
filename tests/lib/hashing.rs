@@ -1,0 +1,103 @@
+use crate::utils::TempDir;
+use std::{env, path::PathBuf};
+
+#[test]
+fn it_hashes_single_file() {
+    let expectation = "48ec422c86fd2aa1ac182f832c10cf6cb07e4b89d88b83a7794bd8773460072c";
+
+    let file_name = "alpha";
+    let file_contents = "alpha-body".as_bytes();
+    let dir = TempDir::new("it_hashes_single_file").unwrap();
+    dir.new_file(file_name, file_contents).unwrap();
+    let source = dir.path().join(file_name);
+
+    let hash_ignored = paq::hash_source(&source, true);
+    assert_eq!(&hash_ignored[..], expectation);
+    let hash_not_ignored = paq::hash_source(&source, false);
+    assert_eq!(&hash_not_ignored[..], expectation);
+}
+
+#[test]
+fn it_hashes_directory() {
+    let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+
+    let dir = TempDir::new("it_hashes_directory").unwrap();
+    let source = dir.path().canonicalize().unwrap();
+
+    let hash_ignored = paq::hash_source(&source, true);
+    assert_eq!(&hash_ignored[..], expectation);
+    let hash_not_ignored = paq::hash_source(&source, false);
+    assert_eq!(&hash_not_ignored[..], expectation);
+}
+
+#[test]
+fn it_hashes_directory_from_any_path() {
+    let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+
+    let dir = TempDir::new("it_hashes_directory_from_any_path").unwrap();
+    let source = dir.path().canonicalize().unwrap();
+    let original_path = env::current_dir().unwrap();
+    let new_path = PathBuf::from("/");
+
+    let hash_ignored = paq::hash_source(&source, true);
+    assert_eq!(&hash_ignored[..], expectation);
+    let hash_ignored = paq::hash_source(&source, false);
+    assert_eq!(&hash_ignored[..], expectation);
+
+    env::set_current_dir(new_path).unwrap();
+
+    let hash_ignored = paq::hash_source(&source, true);
+    assert_eq!(&hash_ignored[..], expectation);
+    let hash_ignored = paq::hash_source(&source, false);
+    assert_eq!(&hash_ignored[..], expectation);
+
+    env::set_current_dir(original_path).unwrap();
+}
+
+#[test]
+fn it_hashes_directory_with_file() {
+    let expectation = "7ed5febd35e277763cdfc3e4bee136acf38e48e9462972a732cc4d348a37d653";
+
+    let file_name = "alpha";
+    let file_contents = "alpha-body".as_bytes();
+    let dir = TempDir::new("it_hashes_directory_with_file").unwrap();
+    dir.new_file(file_name, file_contents).unwrap();
+    let source = dir.path().canonicalize().unwrap();
+
+    let hash_ignored = paq::hash_source(&source, true);
+    assert_eq!(&hash_ignored[..], expectation);
+    let hash_not_ignored = paq::hash_source(&source, false);
+    assert_eq!(&hash_not_ignored[..], expectation);
+}
+
+#[test]
+fn it_hashes_directory_files_consistently() {
+    let expectation = "59a0db8e557830ccb77ac0e4556931925cdc592a1a8b83e1bdc3c8da406f4ef5";
+
+    let alpha_file_name = "alpha";
+    let alpha_file_contents = "alpha-body".as_bytes();
+    let bravo_file_name = "bravo";
+    let bravo_file_contents = "bravo-body".as_bytes();
+    let charlie_file_name = "charlie";
+    let charlie_file_contents = "charlie-body".as_bytes();
+    let one_file_name = "1";
+    let one_file_contents = "1-body".as_bytes();
+    let nine_file_name = "9";
+    let nine_file_contents = "9-body".as_bytes();
+
+    let dir = TempDir::new("it_hashes_directory_files_consistently").unwrap();
+    dir.new_file(alpha_file_name, alpha_file_contents).unwrap();
+    dir.new_file(bravo_file_name, bravo_file_contents).unwrap();
+    dir.new_file(charlie_file_name, charlie_file_contents)
+        .unwrap();
+    dir.new_file(one_file_name, one_file_contents).unwrap();
+    dir.new_file(nine_file_name, nine_file_contents).unwrap();
+    let source = dir.path().canonicalize().unwrap();
+
+    for _ in 0..50 {
+        let hash_ignored = paq::hash_source(&source, true);
+        assert_eq!(&hash_ignored[..], expectation);
+        let hash_not_ignored = paq::hash_source(&source, false);
+        assert_eq!(&hash_not_ignored[..], expectation);
+    }
+}
