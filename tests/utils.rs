@@ -11,6 +11,17 @@ pub const TEMP_DIRECTORY_NAME: &str = "paq";
 /// A convenient result type alias.
 pub type Result<T> = result::Result<T, Box<dyn error::Error + Send + Sync>>;
 
+/// Assert that two trees have distinct hashes with either hidden-file setting.
+pub fn assert_distinct_tree_hashes(left: &TempDir, right: &TempDir) {
+    for ignore_hidden in [false, true] {
+        assert_ne!(
+            paq::try_hash_source(left.path(), ignore_hidden).unwrap(),
+            paq::try_hash_source(right.path(), ignore_hidden).unwrap(),
+            "distinct trees must not collide (ignore_hidden={ignore_hidden})"
+        );
+    }
+}
+
 /// Create an error from a format!-like syntax.
 #[macro_export]
 macro_rules! err {
