@@ -36,6 +36,10 @@ name = "hash_by_file_size"
 harness = false
 
 [[bench]]
+name = "hash_entry_encoding"
+harness = false
+
+[[bench]]
 name = "hash_list_sort"
 harness = false
 
