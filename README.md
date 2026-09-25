@@ -67,9 +67,13 @@ Requires [nix](https://nix.dev/) and the `nix-command` [experimental feature](ht
 nix profile add github:gregl83/paq
 ```
 
-### Python Package
+## Bindings and Integrations
 
-Support for Python is available in the [paqpy](https://github.com/gregl83/paqpy) package.
+Use `paq` for BLAKE3 directory and file hashing in other languages and build tools:
+
+- [paqpy](https://pypi.org/project/paqpy/): Python bindings. [Source](https://github.com/gregl83/paqpy).
+- [@paqjs/core](https://www.npmjs.com/package/@paqjs/core): Node.js bindings for JavaScript and TypeScript. [Source](https://github.com/gregl83/paqjs).
+- [bazel_paq](https://registry.bazel.build/modules/bazel_paq): Bazel aspect for hashing build target outputs. [Source](https://github.com/gregl83/bazel-paq).
 
 ## Usage
 
