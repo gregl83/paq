@@ -93,7 +93,7 @@ fn main() -> anyhow::Result<()> {
                 .short('i')
                 .long("ignore-hidden")
                 .action(ArgAction::SetTrue)
-                .help("Ignore files or directories starting with dot or full stop"),
+                .help("Ignore directories or files starting with dot or full stop"),
         )
         .arg(
             Arg::new("filepath")

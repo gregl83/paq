@@ -176,7 +176,7 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
     blake3::hash(&flattened_bytes).to_hex()
 }
 
-/// Hash system source directory or file using `BLAKE3`.
+/// Hash system source directory or file with `BLAKE3`.
 ///
 /// Source **must** be a path to a directory or file.
 ///

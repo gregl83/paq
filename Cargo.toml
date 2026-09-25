@@ -1,16 +1,16 @@
 [package]
 name = "paq"
-version = "1.5.0"
+version = "2.0.0"
 authors = ["Gregory Langlais <_@gregorylanglais.com>"]
 edition = "2021"
-description = "Hash file or directory recursively."
+description = "Hash a directory or file with BLAKE3."
 license = "MIT"
 readme = "README.md"
 keywords = [
   "hash",
+  "directory",
+  "file",
   "blake3",
-  "directories",
-  "directory-traversal",
   "cryptographic",
 ]
 repository = "https://github.com/gregl83/paq"

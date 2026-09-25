@@ -5,9 +5,7 @@
 
 # paq
 
-Hash file or directory recursively.
-
-Powered by `blake3` cryptographic hashing algorithm.
+Hash a directory or file with `BLAKE3`.
 
 <p align="center">
   <img src="paq.gif" alt="paq hashing demo" />
@@ -129,7 +127,7 @@ Expect different results if `ignore_hidden` is set to `false`.
 
 ## Content Limitations
 
-Hashes are generated using file system content as input data to the `blake3` hashing algorithm.
+Hashes are generated using file system content as input data to the `BLAKE3` hashing algorithm.
 
 By design, `paq` does NOT include file system metadata in hash input such as:
 

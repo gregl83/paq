@@ -1,5 +1,5 @@
 {
-  description = "Hash file or directory recursively.";
+  description = "Hash a directory or file with BLAKE3.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
