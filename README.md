@@ -1,4 +1,4 @@
-[![Build](https://github.com/gregl83/paq/actions/workflows/build.yml/badge.svg)](https://github.com/gregl83/paq/actions/workflows/build.yml)
+[![CI](https://github.com/gregl83/paq/actions/workflows/ci.yml/badge.svg)](https://github.com/gregl83/paq/actions/workflows/ci.yml)
 [![Coverage Status](https://codecov.io/gh/gregl83/paq/graph/badge.svg?token=CL93O7DW9C)](https://codecov.io/gh/gregl83/paq)
 [![Crates.io](https://img.shields.io/crates/v/paq.svg)](https://crates.io/crates/paq)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/gregl83/paq/blob/master/LICENSE)
@@ -33,39 +33,25 @@ See [benchmarks](docs/benchmarks.md) documentation for more details.
 
 ## Installation
 
-### Pre-Built Binary
+### Quick Install
 
-Windows, macOS, and Ubuntu are supported.
+Install the latest release on Linux (x86/x64 with glibc) or macOS (Intel/Apple Silicon):
 
-1. **Download:** Go to the [Latest Release](https://github.com/gregl83/paq/releases) page and download the `.zip` archive matching your OS and Architecture.
-2. **Extract:** Unzip the `.zip` archive to retrieve the `paq` binary.
-3. **Install:** Make the `paq` binary executable (e.g., `chmod +x`) and move it to a directory in your system PATH.
-4. **Verify:** Confirm installation by running `paq --version` from the Command Line Interface.
+```bash
+curl --proto '=https' --tlsv1.2 -fsSL https://raw.githubusercontent.com/gregl83/paq/main/install.sh | sh
+```
 
-### Cargo Install
+Installs to `~/.local/bin`; add it to your `PATH` if needed.
 
-Requires the [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) package manager.
+### Cargo
 
-#### Install From Crates.io
+With the Rust toolchain installed:
 
 ```bash
 cargo install paq
 ```
 
-#### Install From Repository Clone (Unstable)
-
-Not recommended due to instability of `main` branch in-between tagged releases.
-
-1. Clone this repository.
-2. Run `cargo install --path .` from repository root.
-
-### Nix Flakes
-
-Requires [nix](https://nix.dev/) and the `nix-command` [experimental feature](https://nixos.wiki/wiki/Flakes#Enable_flakes_temporarily) to be enabled.
-
-```bash
-nix profile add github:gregl83/paq
-```
+[Download prebuilt binaries](https://github.com/gregl83/paq/releases/latest) for Windows, macOS, and Linux, or see the [installation guide](docs/install.md) for manual downloads, Nix, and installer options.
 
 ## Bindings and Integrations
 
