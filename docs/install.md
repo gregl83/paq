@@ -1,11 +1,17 @@
 # Installing paq
 
-Install paq with the shell installer, a manual download, Cargo, or Nix.
+Choose an installation method:
+
+- [Quick Install](#quick-install): one command for supported Linux and macOS systems.
+- [Manual Download](#manual-download): prebuilt binaries, including Windows.
+- [Cargo](#cargo-install): for users with the Rust toolchain installed.
+- [Nix](#nix-flakes): for existing Nix users.
+- [Build From Source](#build-from-source-unstable): for testing unreleased changes.
 
 ## Quick Install
 
 The shell installer supports the Linux x86/x64 and macOS Intel/Apple Silicon ZIP assets
-published by this repository. Windows users can use the manual downloads.
+published by this repository. Windows users can use [manual downloads](#manual-download).
 On Apple Silicon, the installer selects ARM64 even from a Rosetta terminal.
 On Linux, an x86-64 kernel with 32-bit userspace selects the x86 binary.
 
@@ -18,7 +24,39 @@ curl --proto '=https' --tlsv1.2 -fsSL https://raw.githubusercontent.com/gregl83/
 
 Installs to `~/.local/bin`; add it to your `PATH` if needed.
 
-### Installer options
+## Manual Download
+
+Windows, macOS, and Ubuntu are supported.
+
+1. **Download:** Go to the [Latest Release](https://github.com/gregl83/paq/releases) page and download the `.zip` archive matching your OS and Architecture.
+2. **Extract:** Unzip the `.zip` archive to retrieve the `paq` binary.
+3. **Install:** Make the `paq` binary executable (e.g., `chmod +x`) and move it to a directory in your system PATH.
+4. **Verify:** Confirm installation by running `paq --version` from the Command Line Interface.
+
+## Cargo Install
+
+Requires the [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) package manager.
+
+```bash
+cargo install paq
+```
+
+## Nix Flakes
+
+Requires [nix](https://nix.dev/) and the `nix-command` [experimental feature](https://nixos.wiki/wiki/Flakes#Enable_flakes_temporarily) to be enabled.
+
+```bash
+nix profile add github:gregl83/paq
+```
+
+## Build From Source (Unstable)
+
+Not recommended due to instability of `main` branch in-between tagged releases.
+
+1. Clone this repository.
+2. Run `cargo install --path .` from repository root.
+
+## Shell Installer Options
 
 | Variable          | Default            | Purpose                                          |
 | :---------------- | :----------------- | :----------------------------------------------- |
@@ -51,38 +89,6 @@ For a reproducible setup, use an immutable commit in the script URL in place of
 
 Run the installer again to upgrade, or set `PAQ_VERSION` to select another release.
 Remove the installed `paq` executable to uninstall.
-
-## Manual Download
-
-Windows, macOS, and Ubuntu are supported.
-
-1. **Download:** Go to the [Latest Release](https://github.com/gregl83/paq/releases) page and download the `.zip` archive matching your OS and Architecture.
-2. **Extract:** Unzip the `.zip` archive to retrieve the `paq` binary.
-3. **Install:** Make the `paq` binary executable (e.g., `chmod +x`) and move it to a directory in your system PATH.
-4. **Verify:** Confirm installation by running `paq --version` from the Command Line Interface.
-
-## Cargo Install
-
-Requires the [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) package manager.
-
-```bash
-cargo install paq
-```
-
-### Install From Repository Clone (Unstable)
-
-Not recommended due to instability of `main` branch in-between tagged releases.
-
-1. Clone this repository.
-2. Run `cargo install --path .` from repository root.
-
-## Nix Flakes
-
-Requires [nix](https://nix.dev/) and the `nix-command` [experimental feature](https://nixos.wiki/wiki/Flakes#Enable_flakes_temporarily) to be enabled.
-
-```bash
-nix profile add github:gregl83/paq
-```
 
 ## Troubleshooting
 
