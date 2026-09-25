@@ -4,7 +4,7 @@ use std::path::PathBuf;
 #[cfg(target_family = "unix")]
 #[test]
 fn it_hashes_directory_relative_symlink_without_following() {
-    let expectation = "5bb837eff87dee38d63c081bc30a8d0ce7cc871c8b32e38e3e40f9ccdef4db98";
+    let expectation = "e2c989a91166ea125a275abc9832cef4ffd21953a5eeb31763f850a7aa7c7916";
 
     let symlink_name = "symlink";
     let symlink_target = PathBuf::from("target");
@@ -21,7 +21,7 @@ fn it_hashes_directory_relative_symlink_without_following() {
 #[cfg(target_family = "unix")]
 #[test]
 fn it_hashes_directory_absolute_symlink_without_following() {
-    let expectation = "60fbb028703074fe8b17a20155696f6dffab6a3de071b716792350f946d917aa";
+    let expectation = "bef6e261b38ff07d099269e1783808888b85844c08c37cfff42722e1242bd7af";
 
     let symlink_name = "symlink";
     let symlink_target = PathBuf::from("/");

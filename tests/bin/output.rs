@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 #[test]
 fn it_outputs_directory_hash_using_default_source() {
-    let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+    let expectation = "7887758062e01b93b78eedf93fcfa49c3d0952ee3a278ace176e3dab4d50084e";
 
     let dir = TempDir::new("it_outputs_directory_hash_using_default_source").unwrap();
 
@@ -20,7 +20,7 @@ fn it_outputs_directory_hash_using_default_source() {
 
 #[test]
 fn it_outputs_file_hash_without_output() {
-    let expectation = "48ec422c86fd2aa1ac182f832c10cf6cb07e4b89d88b83a7794bd8773460072c";
+    let expectation = "31611f66817b666bccba70178e3bee75d23ed12fffc9bd30e98e1b912e73194e";
 
     let file_name = "alpha";
     let file_contents = "alpha-body".as_bytes();
@@ -43,7 +43,7 @@ fn it_outputs_file_hash_without_output() {
 
 #[test]
 fn it_outputs_file_hash_using_default_short_arg() {
-    let expectation = "48ec422c86fd2aa1ac182f832c10cf6cb07e4b89d88b83a7794bd8773460072c";
+    let expectation = "31611f66817b666bccba70178e3bee75d23ed12fffc9bd30e98e1b912e73194e";
 
     let file_name = "alpha";
     let file_contents = "alpha-body".as_bytes();
@@ -71,7 +71,7 @@ fn it_outputs_file_hash_using_default_short_arg() {
 
 #[test]
 fn it_outputs_directory_hash_using_default_short_arg() {
-    let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+    let expectation = "7887758062e01b93b78eedf93fcfa49c3d0952ee3a278ace176e3dab4d50084e";
 
     let source_name = "source";
     let hash_file_name = "source.paq";
@@ -98,7 +98,7 @@ fn it_outputs_directory_hash_using_default_short_arg() {
 
 #[test]
 fn it_outputs_file_hash_using_short_arg() {
-    let expectation = "48ec422c86fd2aa1ac182f832c10cf6cb07e4b89d88b83a7794bd8773460072c";
+    let expectation = "31611f66817b666bccba70178e3bee75d23ed12fffc9bd30e98e1b912e73194e";
 
     let file_name = "alpha";
     let file_contents = "alpha-body".as_bytes();
@@ -128,7 +128,7 @@ fn it_outputs_file_hash_using_short_arg() {
 
 #[test]
 fn it_outputs_file_hash_using_default_long_arg() {
-    let expectation = "48ec422c86fd2aa1ac182f832c10cf6cb07e4b89d88b83a7794bd8773460072c";
+    let expectation = "31611f66817b666bccba70178e3bee75d23ed12fffc9bd30e98e1b912e73194e";
 
     let file_name = "alpha";
     let file_contents = "alpha-body".as_bytes();
@@ -156,7 +156,7 @@ fn it_outputs_file_hash_using_default_long_arg() {
 
 #[test]
 fn it_outputs_file_hash_using_long_arg() {
-    let expectation = "48ec422c86fd2aa1ac182f832c10cf6cb07e4b89d88b83a7794bd8773460072c";
+    let expectation = "31611f66817b666bccba70178e3bee75d23ed12fffc9bd30e98e1b912e73194e";
 
     let file_name = "alpha";
     let file_contents = "alpha-body".as_bytes();

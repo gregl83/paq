@@ -3,7 +3,7 @@ use assert_cmd::{cargo::cargo_bin, Command};
 
 #[test]
 fn it_ignores_hidden_files_using_short_arg() {
-    let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+    let expectation = "7887758062e01b93b78eedf93fcfa49c3d0952ee3a278ace176e3dab4d50084e";
 
     let file_name = ".ignored";
     let file_contents = ".ignored-body".as_bytes();
@@ -24,7 +24,7 @@ fn it_ignores_hidden_files_using_short_arg() {
 
 #[test]
 fn it_ignores_hidden_files_using_long_arg() {
-    let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+    let expectation = "7887758062e01b93b78eedf93fcfa49c3d0952ee3a278ace176e3dab4d50084e";
 
     let file_name = ".ignored";
     let file_contents = ".ignored-body".as_bytes();

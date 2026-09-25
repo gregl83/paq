@@ -3,7 +3,7 @@ use std::{env, path::PathBuf};
 
 #[test]
 fn it_hashes_single_file() {
-    let expectation = "48ec422c86fd2aa1ac182f832c10cf6cb07e4b89d88b83a7794bd8773460072c";
+    let expectation = "31611f66817b666bccba70178e3bee75d23ed12fffc9bd30e98e1b912e73194e";
 
     let file_name = "alpha";
     let file_contents = "alpha-body".as_bytes();
@@ -19,7 +19,7 @@ fn it_hashes_single_file() {
 
 #[test]
 fn it_hashes_directory() {
-    let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+    let expectation = "7887758062e01b93b78eedf93fcfa49c3d0952ee3a278ace176e3dab4d50084e";
 
     let dir = TempDir::new("it_hashes_directory").unwrap();
     let source = dir.path().canonicalize().unwrap();
@@ -32,7 +32,7 @@ fn it_hashes_directory() {
 
 #[test]
 fn it_hashes_directory_from_any_path() {
-    let expectation = "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+    let expectation = "7887758062e01b93b78eedf93fcfa49c3d0952ee3a278ace176e3dab4d50084e";
 
     let dir = TempDir::new("it_hashes_directory_from_any_path").unwrap();
     let source = dir.path().canonicalize().unwrap();
@@ -56,7 +56,7 @@ fn it_hashes_directory_from_any_path() {
 
 #[test]
 fn it_hashes_directory_with_file() {
-    let expectation = "7ed5febd35e277763cdfc3e4bee136acf38e48e9462972a732cc4d348a37d653";
+    let expectation = "3f415b1c522892b37d3f945e8427a98bd2cbc50a2f857cb0c8c70ef979d4a112";
 
     let file_name = "alpha";
     let file_contents = "alpha-body".as_bytes();
@@ -72,7 +72,7 @@ fn it_hashes_directory_with_file() {
 
 #[test]
 fn it_hashes_directory_files_consistently() {
-    let expectation = "59a0db8e557830ccb77ac0e4556931925cdc592a1a8b83e1bdc3c8da406f4ef5";
+    let expectation = "12d64568d500f78a043019d8814311c07916abba0653b778a2a7c536b0e3f316";
 
     let alpha_file_name = "alpha";
     let alpha_file_contents = "alpha-body".as_bytes();

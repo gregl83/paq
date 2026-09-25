@@ -122,7 +122,7 @@ let source = std::path::PathBuf::from("example");
 let ignore_hidden = true;
 let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
 
-assert_eq!(&source_hash[..], "a593d18de8b696c153df9079c662346fafbb555cc4b2bbf5c7e6747e23a24d74");
+assert_eq!(&source_hash[..], "2d7ba6963c4836dcbd679607bc432afce5e3c4ef1dc0bed145c20d1b8e2bda77");
 ```
 
 Expect different results if `ignore_hidden` is set to `false`.
@@ -147,6 +147,12 @@ Additionally, files or directory contents starting with dot or full stop _can_ o
 1. **Stream & Hash:** Recursively discovers source system path(s) and hashes them in a parallel pipeline.
 2. **Sort:** Orders the hashes to ensure a deterministic output.
 3. **Finalize:** Computes the final hash by hashing the list of hashes.
+
+Each entry hashes its relative path, a NUL byte (`0x00`), a type byte, and its
+payload. The NUL and type bytes are passed to the hasher together. Type bytes are `0x01` for files, `0x02` for directories, `0x03` for
+symlinks, and `0x04` for other filesystem entries. File payloads are contents;
+symlink payloads are target paths. Directories and other entries have no payload.
+Paths use `/` separators on Windows.
 
 ## License
 

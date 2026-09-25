@@ -3,9 +3,9 @@ use crate::utils::TempDir;
 #[test]
 fn it_hashes_directory_with_ignored_file() {
     let expectation_not_ignored =
-        "e383192a5ef45576817b4222e455e3d538ae3bab279a62c0a8b67279ad007072";
+        "1e8fcf474e6cad4ed136fe2286b5670765510a2c96505ed7a58ad96c01f4f433";
     let expectation_ignored =
-        "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+        "7887758062e01b93b78eedf93fcfa49c3d0952ee3a278ace176e3dab4d50084e";
 
     let file_name = ".ignored";
     let file_contents = ".ignored-body".as_bytes();
@@ -22,9 +22,9 @@ fn it_hashes_directory_with_ignored_file() {
 #[test]
 fn it_hashes_directory_with_ignored_subdirectory() {
     let expectation_not_ignored =
-        "f38a56a87aca98131b2fa5914fd13bc11f5823602293e8d84b5c69000b33ebf2";
+        "2ba515752a46e2d4e5ce37bd8dc4f9e0704461fbf4d90aa02bd2e155a1504167";
     let expectation_ignored =
-        "82878ed8a480ee41775636820e05a934ca5c747223ca64306658ee5982e6c227";
+        "7887758062e01b93b78eedf93fcfa49c3d0952ee3a278ace176e3dab4d50084e";
 
     let dir = TempDir::new("it_hashes_directory_with_ignored_subdirectory").unwrap();
     let source = dir.path().canonicalize().unwrap();

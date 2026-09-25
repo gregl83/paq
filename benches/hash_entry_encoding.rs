@@ -4,18 +4,22 @@ use blake3::{Hash, Hasher};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 // Const parameters keep encoding selection outside the measured hashing work.
-fn hash_entry<const TYPED: bool, const SEPARATED: bool>(
+fn hash_entry<const TYPED: bool, const SEPARATED: bool, const COMBINED: bool>(
     entry_type: u8,
     path: &[u8],
     payload: &[u8],
 ) -> Hash {
     let mut hasher = Hasher::new();
-    if TYPED {
+    if TYPED && !COMBINED {
         hasher.update(&[entry_type]);
     }
     hasher.update(path);
     if SEPARATED {
-        hasher.update(&[0]);
+        if COMBINED {
+            hasher.update(&[0, entry_type]);
+        } else {
+            hasher.update(&[0]);
+        }
     }
     if !payload.is_empty() {
         hasher.update(payload);
@@ -65,19 +69,22 @@ fn bench_hash_entry_encoding(c: &mut Criterion) {
         };
 
         macro_rules! bench_encoding {
-            ($label:literal, $typed:literal, $separated:literal) => {{
+            ($label:literal, $typed:literal, $separated:literal, $combined:literal) => {{
                 // Validate against a single concatenated input outside timing.
                 let mut encoded = Vec::new();
-                if $typed {
+                if $typed && !$combined {
                     encoded.push(entry_type);
                 }
                 encoded.extend_from_slice(&path);
                 if $separated {
                     encoded.push(0);
+                    if $combined {
+                        encoded.push(entry_type);
+                    }
                 }
                 encoded.extend_from_slice(&payload);
                 assert_eq!(
-                    hash_entry::<$typed, $separated>(entry_type, &path, &payload),
+                    hash_entry::<$typed, $separated, $combined>(entry_type, &path, &payload),
                     blake3::hash(&encoded),
                     "{} / {}",
                     $label,
@@ -89,7 +96,7 @@ fn bench_hash_entry_encoding(c: &mut Criterion) {
                     &(entry_type, path.as_slice(), payload.as_slice()),
                     |b, &(entry_type, path, payload)| {
                         b.iter(|| {
-                            black_box(hash_entry::<$typed, $separated>(
+                            black_box(hash_entry::<$typed, $separated, $combined>(
                                 black_box(entry_type),
                                 black_box(path),
                                 black_box(payload),
@@ -100,9 +107,10 @@ fn bench_hash_entry_encoding(c: &mut Criterion) {
             }};
         }
 
-        bench_encoding!("path_and_payload", false, false);
-        bench_encoding!("path_nul_payload", false, true);
-        bench_encoding!("type_path_nul_payload", true, true);
+        bench_encoding!("path_and_payload", false, false, false);
+        bench_encoding!("path_nul_payload", false, true, false);
+        bench_encoding!("type_path_nul_payload", true, true, false);
+        bench_encoding!("path_nul_type_payload", true, true, true);
     }
 
     group.finish();

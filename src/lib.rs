@@ -93,6 +93,16 @@ fn try_hash_path(root: &Path, entry: &DirEntry) -> Result<[u8; 32], Error> {
     let source_type = entry.file_type();
 
     let mut hasher = Hasher::new();
+    // encode relative path, a combined NUL/type marker, then optional payload (collision resistance)
+    let entry_type = if source_type.is_file() {
+        0x01
+    } else if source_type.is_dir() {
+        0x02
+    } else if source_type.is_symlink() {
+        0x03
+    } else {
+        0x04
+    };
     // hash paths for fs changes other than file content (must be relative to root)
     #[cfg(target_family = "unix")]
     {
@@ -102,6 +112,7 @@ fn try_hash_path(root: &Path, entry: &DirEntry) -> Result<[u8; 32], Error> {
     {
         hasher.update(source_path.replace("\\", "/").as_bytes());
     }
+    hasher.update(&[0, entry_type]);
     if source_type.is_symlink() {
         // for symlinks add hash of target path
         let symlink_target_path = fs::read_link(path).map_err(|source| Error::Io {
@@ -165,11 +176,14 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
     blake3::hash(&flattened_bytes).to_hex()
 }
 
-/// Hash file system source.
+/// Hash system source directory or file using `BLAKE3`.
 ///
-/// Source **must** be a path to a file or directory.
+/// Source **must** be a path to a directory or file.
 ///
-/// Uses `blake3` hashing algorithm.
+/// Each entry hashes its relative path, a NUL byte, its type byte
+/// (file: 1, directory: 2, symlink: 3, other: 4), and its payload. File payloads are
+/// contents; symlink payloads are target paths. Other entries have no payload.
+/// Sorted entry digests are concatenated and hashed to produce the source hash.
 ///
 /// ```
 /// use paq;
@@ -178,7 +192,7 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
 /// let ignore_hidden = true;
 /// let source_hash: paq::ArrayString<64> = paq::try_hash_source(&source, ignore_hidden).unwrap();
 ///
-/// assert_eq!(&source_hash[..], "a593d18de8b696c153df9079c662346fafbb555cc4b2bbf5c7e6747e23a24d74");
+/// assert_eq!(&source_hash[..], "2d7ba6963c4836dcbd679607bc432afce5e3c4ef1dc0bed145c20d1b8e2bda77");
 /// ```
 pub fn try_hash_source(source: &Path, ignore_hidden: bool) -> Result<ArrayString<64>, Error> {
     // construct file system walker
@@ -273,6 +287,7 @@ mod tests {
             let hash = super::try_hash_path(&dir, &entry).unwrap();
             let mut hasher = super::Hasher::new();
             hasher.update(file_name.as_bytes());
+            hasher.update(&[0, 0x01]);
             hasher.update(&file_contents);
             assert_eq!(hash, *hasher.finalize().as_bytes());
         }
