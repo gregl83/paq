@@ -184,13 +184,7 @@ fn try_hash_path(
 }
 
 fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
-    let mut flattened_bytes = Vec::with_capacity(file_hashes.len() * 32);
-
-    for file_hash in &file_hashes {
-        flattened_bytes.extend_from_slice(file_hash);
-    }
-
-    blake3::hash(&flattened_bytes).to_hex()
+    blake3::hash(file_hashes.as_flattened()).to_hex()
 }
 
 /// Hash system source directory or file with `BLAKE3`.
