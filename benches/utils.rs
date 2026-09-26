@@ -4,15 +4,14 @@ use std::{
     cmp,
     env,
     error,
-    io::Write,
     fs,
+    io::Write,
     path::{
         Path,
         PathBuf,
     },
     result,
 };
-
 
 pub const TEMP_DIRECTORY_NAME: &str = "paq";
 

@@ -1,13 +1,11 @@
-[![Build](https://github.com/gregl83/paq/actions/workflows/build.yml/badge.svg)](https://github.com/gregl83/paq/actions/workflows/build.yml)
+[![CI](https://github.com/gregl83/paq/actions/workflows/ci.yml/badge.svg)](https://github.com/gregl83/paq/actions/workflows/ci.yml)
 [![Coverage Status](https://codecov.io/gh/gregl83/paq/graph/badge.svg?token=CL93O7DW9C)](https://codecov.io/gh/gregl83/paq)
 [![Crates.io](https://img.shields.io/crates/v/paq.svg)](https://crates.io/crates/paq)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/gregl83/paq/blob/master/LICENSE)
 
 # paq
 
-Hash file or directory recursively.
-
-Powered by `blake3` cryptographic hashing algorithm.
+Hash a directory or file with `BLAKE3`.
 
 <p align="center">
   <img src="paq.gif" alt="paq hashing demo" />
@@ -17,15 +15,19 @@ Powered by `blake3` cryptographic hashing algorithm.
 
 The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb7939c) programming language repository was used as a test data source (157 MB / 14,490 files).
 
-| Tool                       | Version | Command                   |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
-| :------------------------- | :------ | :------------------------ | ------------: | -------: | -------: | -----------: |
-| [paq][paq]                 | latest  | `paq ./go`                |    77.7 ± 0.6 |     77.1 |     80.2 |         1.00 |
-| [b3sum][b3sum]             | 1.5.1   | `find ./go ... b3sum`     |   327.3 ± 3.6 |    320.2 |    332.3 |  4.21 ± 0.05 |
-| [dirhash][dirhash]         | 0.5.0   | `dirhash -a sha256 ./go`  |   576.1 ± 2.9 |    570.8 |    580.3 |  7.41 ± 0.06 |
-| [GNU sha2][gnusha]         | 9.7     | `find ./go ... sha256sum` |  725.2 ± 43.5 |    692.2 |    813.2 |  9.33 ± 0.56 |
-| [folder-hash][folder-hash] | 4.1.1   | `folder-hash ./go`        | 1906.0 ± 78.0 |   1810.0 |   2029.0 | 24.53 ± 1.02 |
+| Tool                       | Version | Command                      |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
+| :------------------------- | :------ | :--------------------------- | ------------: | -------: | -------: | -----------: |
+| [paq][paq]                 | 2.0.0   | `paq ./go`                   |    73.8 ± 0.3 |     73.4 |     74.5 |         1.00 |
+| [merkle_hash][merkle_hash] | 3.9.0   | `merkle-hash ./go`           |    98.3 ± 1.0 |     97.2 |    101.0 |  1.33 ± 0.01 |
+| [b3sum][b3sum]             | 1.5.1   | `find ./go ... b3sum`        |  318.8 ± 10.2 |    304.0 |    340.7 |  4.32 ± 0.14 |
+| [checksumdir][checksumdir] | 1.3.0   | `checksumdir -a sha256 ./go` |   453.1 ± 6.5 |    446.5 |    470.6 |  6.14 ± 0.09 |
+| [dirhash][dirhash]         | 0.5.0   | `dirhash -a sha256 ./go`     |   574.9 ± 6.5 |    566.2 |    589.7 |  7.79 ± 0.09 |
+| [GNU sha2][gnusha]         | 9.11    | `find ./go ... sha256sum`    |  702.0 ± 34.2 |    661.6 |    793.4 |  9.51 ± 0.46 |
+| [folder-hash][folder-hash] | 4.1.1   | `folder-hash ./go`           | 1847.0 ± 40.0 |   1786.0 |   1928.0 | 25.03 ± 0.55 |
 
 [paq]: https://github.com/gregl83/paq
+[merkle_hash]: https://github.com/hristogochev/merkle_hash
+[checksumdir]: https://pypi.org/project/checksumdir/
 [b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
 [gnusha]: https://manpages.debian.org/testing/coreutils/sha256sum.1.en.html
 [dirhash]: https://github.com/andhus/dirhash-python
@@ -35,43 +37,33 @@ See [benchmarks](docs/benchmarks.md) documentation for more details.
 
 ## Installation
 
-### Pre-Built Binary
+### Quick Install
 
-Windows, macOS, and Ubuntu are supported.
+Install the latest release on Linux (x86/x64 with glibc) or macOS (Intel/Apple Silicon):
 
-1. **Download:** Go to the [Latest Release](https://github.com/gregl83/paq/releases) page and download the `.zip` archive matching your OS and Architecture.
-2. **Extract:** Unzip the `.zip` archive to retrieve the `paq` binary.
-3. **Install:** Make the `paq` binary executable (e.g., `chmod +x`) and move it to a directory in your system PATH.
-4. **Verify:** Confirm installation by running `paq --version` from the Command Line Interface.
+```bash
+curl --proto '=https' --tlsv1.2 -fsSL https://raw.githubusercontent.com/gregl83/paq/main/install.sh | sh
+```
 
-### Cargo Install
+Installs to `~/.local/bin`; add it to your `PATH` if needed.
 
-Requires the [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) package manager.
+### Cargo
 
-#### Install From Crates.io
+With the Rust toolchain installed:
 
 ```bash
 cargo install paq
 ```
 
-#### Install From Repository Clone (Unstable)
+[Download prebuilt binaries](https://github.com/gregl83/paq/releases/latest) for Windows, macOS, and Linux, or see the [installation guide](docs/install.md) for manual downloads, Nix, and installer options.
 
-Not recommended due to instability of `main` branch in-between tagged releases.
+## Bindings and Integrations
 
-1. Clone this repository.
-2. Run `cargo install --path .` from repository root.
+Use `paq` for BLAKE3 directory and file hashing in other languages and build tools:
 
-### Nix Flakes
-
-Requires [nix](https://nix.dev/) and the `nix-command` [experimental feature](https://nixos.wiki/wiki/Flakes#Enable_flakes_temporarily) to be enabled.
-
-```bash
-nix profile add github:gregl83/paq
-```
-
-### Python Package
-
-Support for Python is available in the [paqpy](https://github.com/gregl83/paqpy) package.
+- [paqpy](https://pypi.org/project/paqpy/): Python bindings. [Source](https://github.com/gregl83/paqpy).
+- [@paqjs/core](https://www.npmjs.com/package/@paqjs/core): Node.js bindings for JavaScript and TypeScript. [Source](https://github.com/gregl83/paqjs).
+- [bazel_paq](https://registry.bazel.build/modules/bazel_paq): Bazel aspect for hashing build target outputs. [Source](https://github.com/gregl83/bazel-paq).
 
 ## Usage
 
@@ -95,41 +87,42 @@ paq ./example
 
 Path to example directory can be relative or absolute.
 
-Expect different results if `-i` or `--ignore-hidden` flag argument is used.
+Use `-i` / `--ignore-hidden` to omit hidden entries.
+
+Use `-L` / `--follow` to hash symbolic-link targets and traverse linked
+directories, including targets outside the source tree. Broken links and cycles
+return an error. Link following defaults to false: links are hashed by their
+target-path text, including when the source itself is a symbolic link.
+These options can change the resulting hash.
 
 ### Crate Library
 
 Add `paq` to project [dependencies](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-cratesio) in `Cargo.toml`.
+
+`hash_source` hashes a file or directory, with options to ignore hidden entries
+and follow symbolic links. Errors are returned as `paq::Error`.
 
 #### Use Library
 
 ```rust
 use paq;
 
-let source = std::path::PathBuf::from("/path/to/source");
-let ignore_hidden = true; // .dir or .file
-let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
+fn main() -> Result<(), paq::Error> {
+    let source = std::path::PathBuf::from("/path/to/source");
+    let ignore_hidden = true; // .dir or .file
+    let follow_links = false;
+    let source_hash = paq::hash_source(&source, ignore_hidden, follow_links)?;
 
-println!("{}", source_hash);
+    println!("{}", source_hash);
+    Ok(())
+}
 ```
-
-#### Hash Example Directory
-
-```rust
-use paq;
-
-let source = std::path::PathBuf::from("example");
-let ignore_hidden = true;
-let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
-
-assert_eq!(&source_hash[..], "a593d18de8b696c153df9079c662346fafbb555cc4b2bbf5c7e6747e23a24d74");
-```
-
-Expect different results if `ignore_hidden` is set to `false`.
 
 ## Content Limitations
 
-Hashes are generated using file system content as input data to the `blake3` hashing algorithm.
+Files must remain unchanged during hashing; modifying memory-mapped files can cause undefined behavior, including crashes.
+
+Hashes are generated using file system content as input data to the `BLAKE3` hashing algorithm.
 
 By design, `paq` does NOT include file system metadata in hash input such as:
 
@@ -138,7 +131,7 @@ By design, `paq` does NOT include file system metadata in hash input such as:
 - File modification and access times
 - File ACLs and extended attributes
 - Hard links
-- Symlink target contents (target path is hashed)
+- Symlink target contents unless `--follow` is enabled (otherwise the target path is hashed)
 
 Additionally, files or directory contents starting with dot or full stop _can_ optionally be ignored.
 
@@ -147,6 +140,12 @@ Additionally, files or directory contents starting with dot or full stop _can_ o
 1. **Stream & Hash:** Recursively discovers source system path(s) and hashes them in a parallel pipeline.
 2. **Sort:** Orders the hashes to ensure a deterministic output.
 3. **Finalize:** Computes the final hash by hashing the list of hashes.
+
+Each entry hashes its relative path, a NUL byte (`0x00`), a type byte, and its
+payload. The NUL and type bytes are passed to the hasher together. Type bytes are `0x01` for files, `0x02` for directories, `0x03` for
+symlinks, and `0x04` for other filesystem entries. File payloads are contents;
+symlink payloads are target paths. Directories and other entries have no payload.
+Paths use `/` separators on Windows.
 
 ## License
 

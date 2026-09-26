@@ -5,12 +5,6 @@
 //! cargo run -- -h
 //! ```
 
-use anyhow::Context;
-use clap::{
-    builder::TypedValueParser, crate_description, crate_name, crate_version, error::ContextKind,
-    error::ContextValue, error::ErrorKind, Arg, ArgAction, Command,
-};
-use paq::try_hash_source;
 use std::{
     fs::File,
     io::{
@@ -20,8 +14,25 @@ use std::{
     path::{
         Path,
         PathBuf,
-    }
+    },
 };
+
+use anyhow::Context;
+use clap::{
+    builder::TypedValueParser,
+    crate_description,
+    crate_name,
+    crate_version,
+    error::{
+        ContextKind,
+        ContextValue,
+        ErrorKind,
+    },
+    Arg,
+    ArgAction,
+    Command,
+};
+use paq::hash_source;
 
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
@@ -39,7 +50,7 @@ impl TypedValueParser for PathBufferValueParser {
         value: &std::ffi::OsStr,
     ) -> Result<Self::Value, clap::Error> {
         let path = PathBuf::from(value);
-        if self.validate_exists && !path.exists() {
+        if self.validate_exists && path.symlink_metadata().is_err() {
             let mut err = clap::Error::new(ErrorKind::InvalidValue).with_cmd(cmd);
             err.insert(
                 ContextKind::InvalidArg,
@@ -60,13 +71,18 @@ impl TypedValueParser for PathBufferValueParser {
 }
 
 fn derive_output_filepath(source: &Path) -> Result<PathBuf, Error> {
-    let source_canonical = source.canonicalize()?;
-    let mut source_filename = source_canonical
+    // Resolve dot paths to a directory name, but preserve named symlinks.
+    let source = if source.file_name().is_some() {
+        source.to_path_buf()
+    } else {
+        source.canonicalize()?
+    };
+    let mut source_filename = source
         .file_name()
         .ok_or_else(|| Error::other("source path has no file name"))?
         .to_os_string();
     source_filename.push(".paq");
-    Ok(source_canonical.with_file_name(source_filename))
+    Ok(source.with_file_name(source_filename))
 }
 
 fn write_hashfile(filepath: &Path, hash: &str) -> Result<(), Error> {
@@ -93,7 +109,14 @@ fn main() -> anyhow::Result<()> {
                 .short('i')
                 .long("ignore-hidden")
                 .action(ArgAction::SetTrue)
-                .help("Ignore files or directories starting with dot or full stop"),
+                .help("Ignore directories or files starting with dot or full stop"),
+        )
+        .arg(
+            Arg::new("follow")
+                .short('L')
+                .long("follow")
+                .action(ArgAction::SetTrue)
+                .help("Follow symbolic links and hash their targets"),
         )
         .arg(
             Arg::new("filepath")
@@ -114,8 +137,9 @@ fn main() -> anyhow::Result<()> {
 
     let source = matches.get_one::<PathBuf>("src").unwrap();
     let ignore_hidden = matches.get_flag("ignore-hidden");
+    let follow_links = matches.get_flag("follow");
     let output: Option<&PathBuf> = matches.get_one::<PathBuf>("filepath");
-    let hash = try_hash_source(source, ignore_hidden)
+    let hash = hash_source(source, ignore_hidden, follow_links)
         .with_context(|| format!("failed to hash `{}`", source.display()))?;
 
     if let Some(filepath) = output {
@@ -126,9 +150,8 @@ fn main() -> anyhow::Result<()> {
         } else {
             filepath.to_path_buf()
         };
-        write_hashfile(&output_filepath, hash.as_str()).with_context(|| {
-            format!("failed to write hash to `{}`", output_filepath.display())
-        })?;
+        write_hashfile(&output_filepath, hash.as_str())
+            .with_context(|| format!("failed to write hash to `{}`", output_filepath.display()))?;
     }
 
     println!("{hash}");
@@ -155,11 +178,13 @@ mod tests {
     }
 
     #[test]
-    fn it_returns_error_for_missing_output_source() {
+    fn it_derives_output_without_resolving_source() {
         let path = super::Path::new(env!("CARGO_MANIFEST_DIR")).join("__paq_test_missing_path__");
 
-        let error = super::derive_output_filepath(&path).unwrap_err();
-        assert_eq!(error.kind(), std::io::ErrorKind::NotFound);
+        assert_eq!(
+            super::derive_output_filepath(&path).unwrap(),
+            path.with_file_name("__paq_test_missing_path__.paq")
+        );
     }
 
     #[test]

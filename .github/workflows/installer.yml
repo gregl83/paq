@@ -1,0 +1,22 @@
+name: installer
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+
+jobs:
+  installer:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check shell syntax
+        run: |
+          sh -n install.sh
+          bash -n bin/publish-release.sh
+      - name: Test installer
+        run: python3 bin/test-installer.py

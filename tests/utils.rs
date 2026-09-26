@@ -1,15 +1,33 @@
-use std::env;
-use std::error;
-use std::fs::{self};
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::symlink;
-use std::path::{Path, PathBuf};
-use std::result;
+use std::{
+    env,
+    error,
+    fs::{
+        self,
+    },
+    path::{
+        Path,
+        PathBuf,
+    },
+    result,
+};
 
 pub const TEMP_DIRECTORY_NAME: &str = "paq";
 
 /// A convenient result type alias.
 pub type Result<T> = result::Result<T, Box<dyn error::Error + Send + Sync>>;
+
+/// Assert that two trees have distinct hashes with either hidden-file setting.
+pub fn assert_distinct_tree_hashes(left: &TempDir, right: &TempDir) {
+    for ignore_hidden in [false, true] {
+        assert_ne!(
+            paq::hash_source(left.path(), ignore_hidden, false).unwrap(),
+            paq::hash_source(right.path(), ignore_hidden, false).unwrap(),
+            "distinct trees must not collide (ignore_hidden={ignore_hidden})"
+        );
+    }
+}
 
 /// Create an error from a format!-like syntax.
 #[macro_export]
@@ -71,11 +89,8 @@ impl TempDir {
     #[cfg(target_family = "unix")]
     pub fn new_symlink(&self, name: &str, target: PathBuf) -> Result<()> {
         let symlink_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        symlink(target.as_os_str(), symlink_path.as_os_str())
-        .expect("Unable to create symlink");
-        Ok(
-            (),
-        )
+        symlink(target.as_os_str(), symlink_path.as_os_str()).expect("Unable to create symlink");
+        Ok(())
     }
 
     /// Return the underlying path to this temporary directory.

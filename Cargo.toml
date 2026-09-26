@@ -1,18 +1,12 @@
 [package]
 name = "paq"
-version = "1.5.0"
+version = "2.0.0"
 authors = ["Gregory Langlais <_@gregorylanglais.com>"]
 edition = "2021"
-description = "Hash file or directory recursively."
+description = "Hash a directory or file with BLAKE3."
 license = "MIT"
 readme = "README.md"
-keywords = [
-  "hash",
-  "blake3",
-  "directories",
-  "directory-traversal",
-  "cryptographic",
-]
+keywords = ["hash", "directory", "file", "blake3", "cryptographic"]
 repository = "https://github.com/gregl83/paq"
 homepage = "https://crates.io/crates/paq"
 
@@ -32,7 +26,19 @@ panic = "abort"
 strip = true
 
 [[bench]]
+name = "hash_buffer_reuse"
+harness = false
+
+[[bench]]
 name = "hash_by_file_size"
+harness = false
+
+[[bench]]
+name = "hash_entry_encoding"
+harness = false
+
+[[bench]]
+name = "hash_large_file"
 harness = false
 
 [[bench]]
@@ -44,11 +50,7 @@ name = "hash_list_hash"
 harness = false
 
 [[bench]]
-name = "hash_using_jwalk"
-harness = false
-
-[[bench]]
-name = "hash_using_walkdir"
+name = "tree_walk"
 harness = false
 
 [[bench]]
@@ -60,7 +62,7 @@ harness = false
 [dependencies]
 anyhow = "1.0.104"
 arrayvec = "0.7.6"
-blake3 = "1.8.5"
+blake3 = { version = "1.8.5", features = ["rayon"] }
 clap = { version = "4.6.1", features = ["cargo", "unstable-styles"] }
 memmap2 = "0.9.10"
 rayon = "1.12"

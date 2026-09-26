@@ -1,19 +1,20 @@
-use std::time::Duration;
+use std::{
+    hint::black_box,
+    time::Duration,
+};
 
 use criterion::{
-    BenchmarkId,
-    Criterion,
     criterion_group,
     criterion_main,
+    BatchSize,
+    BenchmarkId,
+    Criterion,
     Throughput,
 };
 use rayon::prelude::ParallelSliceMut;
 
-
 fn bench_hash_list_sort(c: &mut Criterion) {
-    let mut group = c.benchmark_group(
-        "sort_blake3_hashes"
-    );
+    let mut group = c.benchmark_group("sort_blake3_hashes");
     group.warm_up_time(Duration::from_secs(2));
     group.measurement_time(Duration::from_secs(10));
 
@@ -26,35 +27,35 @@ fn bench_hash_list_sort(c: &mut Criterion) {
         // generate hash list
         let file_hashes: Vec<[u8; 32]> = (0..n)
             .map(|i| {
-                blake3::hash(
-                    format!("test_file_{i}").as_bytes()
-                ).as_bytes().to_owned()
+                blake3::hash(format!("test_file_{i}").as_bytes())
+                    .as_bytes()
+                    .to_owned()
             })
             .collect();
 
         group.throughput(Throughput::Elements(n as u64));
 
-        group.bench_with_input(
-            BenchmarkId::new("sequential", n),
-            &file_hashes,
-            |b, src| {
-                let mut v = src.clone();
-                b.iter(|| {
+        group.bench_with_input(BenchmarkId::new("sequential", n), &file_hashes, |b, src| {
+            b.iter_batched_ref(
+                || src.clone(),
+                |v| {
                     v.sort_unstable();
-                });
-            }
-        );
+                    black_box(v);
+                },
+                BatchSize::SmallInput,
+            );
+        });
 
-        group.bench_with_input(
-            BenchmarkId::new("parallel", n),
-            &file_hashes,
-            |b, src| {
-                let mut v = src.clone();
-                b.iter(|| {
+        group.bench_with_input(BenchmarkId::new("parallel", n), &file_hashes, |b, src| {
+            b.iter_batched_ref(
+                || src.clone(),
+                |v| {
                     v.par_sort_unstable();
-                });
-            }
-        );
+                    black_box(v);
+                },
+                BatchSize::SmallInput,
+            );
+        });
     }
 
     group.finish();

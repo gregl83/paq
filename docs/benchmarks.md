@@ -1,4 +1,4 @@
-[![Build](https://github.com/gregl83/paq/actions/workflows/build.yml/badge.svg)](https://github.com/gregl83/paq/actions/workflows/build.yml)
+[![CI](https://github.com/gregl83/paq/actions/workflows/ci.yml/badge.svg)](https://github.com/gregl83/paq/actions/workflows/ci.yml)
 [![Coverage Status](https://codecov.io/gh/gregl83/paq/graph/badge.svg?token=CL93O7DW9C)](https://codecov.io/gh/gregl83/paq)
 [![Crates.io](https://img.shields.io/crates/v/paq.svg)](https://crates.io/crates/paq)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/gregl83/paq/blob/master/LICENSE)
@@ -46,10 +46,35 @@ Benchmarks are executed using [hyperfine](https://github.com/sharkdp/hyperfine).
 
 The [bin](../bin) directory contains a helper script, [comparison.sh](../bin/comparison.sh), which invokes `hyperfine` to run comparative benchmarks against other tools.
 
+From the paq checkout, run the comparison against the EC2 template's Go corpus:
+
+```bash
+nix develop .#benchmark
+bash bin/comparison.sh /mnt/benchmark/target --runs 20
+```
+
+The shell includes `merkle-hash`, a small [benchmark wrapper](../benches/merkle_hash)
+for [merkle_hash](https://github.com/hristogochev/merkle_hash) 3.9.0. It prints the
+directory root hash using BLAKE3, filename hashing, and the library's default
+parallel processing. Its dependencies are pinned in a separate Cargo lockfile,
+and its release profile matches paq's. Compilation is outside the timed commands.
+
+This compares execution time, not identical hash values: the tools use different
+hash formats. In particular, `merkle_hash` follows symbolic links, while paq does
+not by default. Use a tree without symbolic links for this comparison, such as
+the pinned Go corpus, and keep hidden files included.
+
+To build and run the wrapper without Nix:
+
+```bash
+cargo build --release --locked --manifest-path benches/merkle_hash/Cargo.toml --target-dir target
+./target/release/merkle-hash /mnt/benchmark/target
+```
+
 Hyperfine benchmark commands starting with `find` use the following command with various `<hashsum>` implementations:
 
 ```bash
-find ./go -type f -print0 | LC_ALL=C sort -z | xargs -0 <hashsum> | <hashsum>
+find /mnt/benchmark/target -type f -print0 | LC_ALL=C sort -z | xargs -0 <hashsum> | <hashsum>
 ```
 
 ## Regression Testing

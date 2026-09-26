@@ -1,29 +1,29 @@
 settings:
-  title: paq demo
-  width: 90
-  height: 24
-  prompt: "\e[92m\e[1mubuntu\e[0m:\e[94m\e[1m/home/demo\e[0m$ "
+  title: paq — one hash for an entire directory
+  width: 78
+  height: 16
+  prompt: "\e[92m$\e[0m "
+  type_speed: 40ms
   environment:
     - name: TERM
       value: "xterm-256color"
 
 instructions:
   - !Command
-    command: paq -h
-  - !Wait 5s
+    command: "# hash a directory"
+    type_speed: 0ms
   - !Command
     command: paq ./example
-  - !Wait 2s
+  - !Wait 3s
   - !Command
-    command: cd ./example
-  - !Command
-    command: paq
-  - !Wait 2s
-  - !Command
-    command: cd ..
+    command: "# ignore hidden files"
+    type_speed: 0ms
   - !Command
     command: paq --ignore-hidden ./example
-  - !Wait 2s
+  - !Wait 3s
+  - !Command
+    command: "# save the result"
+    type_speed: 0ms
   - !Command
     command: paq --ignore-hidden -o ./example
   - !Wait 1s

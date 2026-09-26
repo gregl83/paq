@@ -1,13 +1,20 @@
-name: release
+name: cd
 
 on:
-  release:
-    types: [published]
+  push:
+    tags: ["v[0-9]*"]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  installer:
+    uses: ./.github/workflows/installer.yml
+
   all-go:
     name: all systems go
     runs-on: ubuntu-latest
@@ -46,7 +53,7 @@ jobs:
             architecture: arm64
             target: aarch64-apple-darwin
           # --- macOS Intel ---
-          - os: macos-latest
+          - os: macos-15-intel
             architecture: x64
             target: x86_64-apple-darwin
     steps:
@@ -98,6 +105,7 @@ jobs:
 
   build:
     needs:
+      - installer
       - test
       - cover
     runs-on: ${{ matrix.os }}
@@ -125,7 +133,7 @@ jobs:
             architecture: arm64
             target: aarch64-apple-darwin
           # --- macOS Intel ---
-          - os: macos-latest
+          - os: macos-15-intel
             architecture: x64
             target: x86_64-apple-darwin
     steps:
@@ -152,7 +160,7 @@ jobs:
           name: ${{ matrix.os }}-${{ matrix.architecture }}
           path: target/${{ matrix.target }}/release/
 
-  release:
+  package-release:
     needs:
       - test
       - cover
@@ -182,11 +190,9 @@ jobs:
             architecture: arm64
             target: aarch64-apple-darwin
           # --- macOS Intel ---
-          - os: macos-latest
+          - os: macos-15-intel
             architecture: x64
             target: x86_64-apple-darwin
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v7
 
@@ -223,13 +229,76 @@ jobs:
           archive=${{ steps.vars.outputs.name }}-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}.zip
           mv "$source" "$binary"
           zip "$archive" "$binary"
+          sha256sum "$archive" > "$archive.sha256"
 
-      - name: Upload Artifact to Release
-        uses: softprops/action-gh-release@v3
+      - name: Upload Release Assets
+        uses: actions/upload-artifact@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: |
+          name: release-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}
+          if-no-files-found: error
+          path: |
             ${{ steps.vars.outputs.name }}-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}.zip
+            ${{ steps.vars.outputs.name }}-${{ steps.vars.outputs.os }}-${{ matrix.architecture }}.zip.sha256
+
+  smoke-release:
+    needs: package-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: ubuntu-x64
+          - os: ubuntu-latest
+            platform: ubuntu-x86
+          - os: macos-latest
+            platform: macos-arm64
+          - os: macos-15-intel
+            platform: macos-x64
+          - os: windows-latest
+            platform: windows-x64
+          - os: windows-latest
+            platform: windows-x86
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Download Packaged Release
+        uses: actions/download-artifact@v8
+        with:
+          name: release-${{ matrix.platform }}
+          path: release-assets
+      - name: Install 32-bit Runtime
+        if: matrix.platform == 'ubuntu-x86'
+        run: sudo apt-get update && sudo apt-get install -y gcc-multilib
+      - name: Test Packaged Executable
+        env:
+          RELEASE_PLATFORM: ${{ matrix.platform }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: python bin/smoke-release.py release-assets "$RELEASE_PLATFORM" "${RELEASE_TAG#v}"
+
+  release:
+    needs: [package-release, smoke-release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download All Release Assets
+        uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release-assets
+      - name: Upload and Publish Complete Release
+        working-directory: release-assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: bash ../bin/publish-release.sh "$RELEASE_TAG"
 
   publish:
     needs: release

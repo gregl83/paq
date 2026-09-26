@@ -1,17 +1,27 @@
 use std::{
     fs,
-    io::{self, prelude::*},
+    io::{
+        self,
+        prelude::*,
+    },
     iter,
-    path::{Path, PathBuf},
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
 pub use arrayvec::ArrayString;
 use blake3::Hasher;
 use memmap2::Mmap;
 use rayon::prelude::*;
-use walkdir::{DirEntry, WalkDir};
+use walkdir::{
+    DirEntry,
+    WalkDir,
+};
 
 pub const PATH_BATCH_SIZE: usize = 100;
+pub const MIN_FILE_SIZE_FOR_PARALLEL_HASHING: usize = 16 * 1024 * 1024;
 pub const MAX_FILE_SIZE_FOR_UNBUFFERED_READ: u64 = 1024 + 1;
 #[cfg(not(target_os = "windows"))]
 pub const MIN_FILE_SIZE_FOR_MMAP_READ: u64 = 1024 * 1024 - 1;
@@ -61,12 +71,16 @@ fn filter(ignore_hidden: bool) -> impl FnMut(&DirEntry) -> bool {
     }
 }
 
-fn try_buffer_file_to_hasher(hasher: &mut Hasher, path: &Path) -> Result<(), Error> {
+fn try_buffer_file_to_hasher(
+    hasher: &mut Hasher,
+    path: &Path,
+    buffer: &mut [u8; FILE_BUFFER_SIZE],
+) -> Result<(), Error> {
     let mut file = fs::File::open(path).map_err(|source| Error::Io {
         path: path.to_path_buf(),
         source,
     })?;
-    let mut buffer = [0; FILE_BUFFER_SIZE];
+
     loop {
         let buffer_size = file.read(&mut buffer[..]).map_err(|source| Error::Io {
             path: path.to_path_buf(),
@@ -80,7 +94,11 @@ fn try_buffer_file_to_hasher(hasher: &mut Hasher, path: &Path) -> Result<(), Err
     Ok(())
 }
 
-fn try_hash_path(root: &Path, entry: &DirEntry) -> Result<[u8; 32], Error> {
+fn try_hash_path(
+    root: &Path,
+    entry: &DirEntry,
+    read_buffer: &mut [u8; FILE_BUFFER_SIZE],
+) -> Result<[u8; 32], Error> {
     let path = entry.path();
     let source_path = path
         .strip_prefix(root)
@@ -93,6 +111,16 @@ fn try_hash_path(root: &Path, entry: &DirEntry) -> Result<[u8; 32], Error> {
     let source_type = entry.file_type();
 
     let mut hasher = Hasher::new();
+    // encode relative path, a combined NUL/type marker, then optional payload (collision resistance)
+    let entry_type = if source_type.is_file() {
+        0x01
+    } else if source_type.is_dir() {
+        0x02
+    } else if source_type.is_symlink() {
+        0x03
+    } else {
+        0x04
+    };
     // hash paths for fs changes other than file content (must be relative to root)
     #[cfg(target_family = "unix")]
     {
@@ -102,6 +130,7 @@ fn try_hash_path(root: &Path, entry: &DirEntry) -> Result<[u8; 32], Error> {
     {
         hasher.update(source_path.replace("\\", "/").as_bytes());
     }
+    hasher.update(&[0, entry_type]);
     if source_type.is_symlink() {
         // for symlinks add hash of target path
         let symlink_target_path = fs::read_link(path).map_err(|source| Error::Io {
@@ -141,49 +170,69 @@ fn try_hash_path(root: &Path, entry: &DirEntry) -> Result<[u8; 32], Error> {
             })?;
             match unsafe { Mmap::map(&file) } {
                 Ok(mmap) => {
-                    hasher.update(&mmap);
+                    if mmap.len() >= MIN_FILE_SIZE_FOR_PARALLEL_HASHING {
+                        hasher.update_rayon(&mmap);
+                    } else {
+                        hasher.update(&mmap);
+                    }
                 }
                 Err(_) => {
-                    try_buffer_file_to_hasher(&mut hasher, path)?;
+                    try_buffer_file_to_hasher(&mut hasher, path, read_buffer)?;
                 }
             }
         } else {
             // medium file size read using buffer
-            try_buffer_file_to_hasher(&mut hasher, path)?;
+            try_buffer_file_to_hasher(&mut hasher, path, read_buffer)?;
         }
     }
     Ok(*hasher.finalize().as_bytes())
 }
 
 fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
-    let mut flattened_bytes = Vec::with_capacity(file_hashes.len() * 32);
-
-    for file_hash in &file_hashes {
-        flattened_bytes.extend_from_slice(file_hash);
-    }
-
-    blake3::hash(&flattened_bytes).to_hex()
+    blake3::hash(file_hashes.as_flattened()).to_hex()
 }
 
-/// Hash file system source.
+/// Hash system source directory or file with `BLAKE3`.
 ///
-/// Source **must** be a path to a file or directory.
+/// Source may be a directory, file, or symbolic link.
 ///
-/// Uses `blake3` hashing algorithm.
+/// Each entry hashes its relative path, a NUL byte, its type byte
+/// (file: 1, directory: 2, symlink: 3, other: 4), and its payload. File payloads are
+/// contents; symlink payloads are target paths. Other entries have no payload.
+/// Sorted entry digests are concatenated and hashed to produce the source hash.
+///
+/// When `follow_links` is true, links contribute their target's type and contents
+/// under the link's relative path; directory targets are traversed, including
+/// targets outside the source tree. Broken links and cycles return [`Error::Walk`].
+/// Hidden-entry filtering applies to the paths encountered during traversal.
+///
+/// When `follow_links` is false, links contribute their target-path text without
+/// resolving the target. This also applies when the source itself is a symlink.
+///
+/// # Errors
+///
+/// Returns [`Error`] if traversal, file access, or path encoding fails.
 ///
 /// ```
 /// use paq;
 ///
 /// let source = std::path::PathBuf::from("example");
 /// let ignore_hidden = true;
-/// let source_hash: paq::ArrayString<64> = paq::try_hash_source(&source, ignore_hidden).unwrap();
+/// let follow_links = false;
+/// let source_hash = paq::hash_source(&source, ignore_hidden, follow_links)?;
 ///
-/// assert_eq!(&source_hash[..], "a593d18de8b696c153df9079c662346fafbb555cc4b2bbf5c7e6747e23a24d74");
+/// assert_eq!(&source_hash[..], "2d7ba6963c4836dcbd679607bc432afce5e3c4ef1dc0bed145c20d1b8e2bda77");
+/// # Ok::<(), paq::Error>(())
 /// ```
-pub fn try_hash_source(source: &Path, ignore_hidden: bool) -> Result<ArrayString<64>, Error> {
+pub fn hash_source(
+    source: &Path,
+    ignore_hidden: bool,
+    follow_links: bool,
+) -> Result<ArrayString<64>, Error> {
     // construct file system walker
     let mut walker = WalkDir::new(source)
-        .follow_links(false)
+        .follow_links(follow_links)
+        .follow_root_links(follow_links)
         .into_iter()
         .filter_entry(filter(ignore_hidden));
 
@@ -211,9 +260,10 @@ pub fn try_hash_source(source: &Path, ignore_hidden: bool) -> Result<ArrayString
     let mut hashes: Vec<[u8; 32]> = batch_iter
         .par_bridge()
         .flat_map_iter(|batch| {
+            let mut read_buffer = [0u8; FILE_BUFFER_SIZE];
             batch
                 .into_iter()
-                .map(|entry| try_hash_path(source, &entry?))
+                .map(move |entry| try_hash_path(source, &entry?, &mut read_buffer))
         })
         .collect::<Result<_, Error>>()?;
 
@@ -221,11 +271,6 @@ pub fn try_hash_source(source: &Path, ignore_hidden: bool) -> Result<ArrayString
     hashes.par_sort_unstable();
 
     Ok(get_hashes_root(hashes))
-}
-
-/// Hash file system source, panicking on error.
-pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
-    try_hash_source(source, ignore_hidden).unwrap()
 }
 
 #[cfg(test)]
@@ -270,9 +315,11 @@ mod tests {
             super::fs::write(&path, &file_contents).unwrap();
             let entry = file_entry(&path);
 
-            let hash = super::try_hash_path(&dir, &entry).unwrap();
+            let hash =
+                super::try_hash_path(&dir, &entry, &mut [0; super::FILE_BUFFER_SIZE]).unwrap();
             let mut hasher = super::Hasher::new();
             hasher.update(file_name.as_bytes());
+            hasher.update(&[0, 0x01]);
             hasher.update(&file_contents);
             assert_eq!(hash, *hasher.finalize().as_bytes());
         }
@@ -281,11 +328,45 @@ mod tests {
     }
 
     #[test]
+    fn it_preserves_hashes_at_parallel_file_threshold() {
+        let dir = test_directory("parallel_file_threshold");
+        let threshold = super::MIN_FILE_SIZE_FOR_PARALLEL_HASHING;
+        let mut expected = vec![*blake3::hash(&[0, 0x02]).as_bytes()];
+        for size in [threshold - 1, threshold, threshold + 1] {
+            let name = format!("file-{size}");
+            let contents: Vec<u8> = (0..size).map(|i| (i % 251) as u8).collect();
+            super::fs::write(dir.join(&name), &contents).unwrap();
+            // sequential reference includes the path/type prefix before file bytes.
+            let mut hasher = super::Hasher::new();
+            hasher.update(name.as_bytes());
+            hasher.update(&[0, 0x01]);
+            hasher.update(&contents);
+            expected.push(*hasher.finalize().as_bytes());
+        }
+        expected.sort_unstable();
+        let expected = super::get_hashes_root(expected);
+        for workers in [1, 4] {
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(workers)
+                .build()
+                .unwrap();
+            assert_eq!(
+                pool.install(|| super::hash_source(&dir, false, false))
+                    .unwrap(),
+                expected
+            );
+        }
+        super::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
     fn it_returns_io_error_for_missing_path() {
         let path = super::Path::new(env!("CARGO_MANIFEST_DIR")).join("__paq_test_missing_path__");
         let mut hasher = super::Hasher::new();
 
-        let error = super::try_buffer_file_to_hasher(&mut hasher, &path).unwrap_err();
+        let error =
+            super::try_buffer_file_to_hasher(&mut hasher, &path, &mut [0; super::FILE_BUFFER_SIZE])
+                .unwrap_err();
         assert!(error
             .to_string()
             .starts_with(format!("failed to access path `{}`:", path.display()).as_str()));
@@ -304,7 +385,9 @@ mod tests {
         let dir = test_directory("it_returns_io_error_for_directory_read");
         let mut hasher = super::Hasher::new();
 
-        let error = super::try_buffer_file_to_hasher(&mut hasher, &dir).unwrap_err();
+        let error =
+            super::try_buffer_file_to_hasher(&mut hasher, &dir, &mut [0; super::FILE_BUFFER_SIZE])
+                .unwrap_err();
         assert!(matches!(
             error,
             super::Error::Io {
@@ -326,7 +409,8 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let error = super::try_hash_path(&root, &entry).unwrap_err();
+        let error =
+            super::try_hash_path(&root, &entry, &mut [0; super::FILE_BUFFER_SIZE]).unwrap_err();
         assert_eq!(
             error.to_string(),
             format!(
@@ -355,7 +439,8 @@ mod tests {
         let entry = file_entry(&path);
         super::fs::remove_file(&path).unwrap();
 
-        let error = super::try_hash_path(&dir, &entry).unwrap_err();
+        let error =
+            super::try_hash_path(&dir, &entry, &mut [0; super::FILE_BUFFER_SIZE]).unwrap_err();
         assert!(matches!(
             error,
             super::Error::Io {
@@ -372,7 +457,10 @@ mod tests {
     fn it_returns_error_for_invalid_utf8_symlink() {
         use std::{
             ffi::OsString,
-            os::{unix::ffi::OsStringExt, unix::fs::symlink},
+            os::unix::{
+                ffi::OsStringExt,
+                fs::symlink,
+            },
         };
 
         let dir = test_directory("it_returns_error_for_invalid_utf8_symlink");
@@ -381,7 +469,8 @@ mod tests {
         symlink(&target, &path).unwrap();
         let entry = file_entry(&path);
 
-        let error = super::try_hash_path(&dir, &entry).unwrap_err();
+        let error =
+            super::try_hash_path(&dir, &entry, &mut [0; super::FILE_BUFFER_SIZE]).unwrap_err();
         assert!(matches!(
             error,
             super::Error::InvalidUtf8Path(error_path) if error_path == target
