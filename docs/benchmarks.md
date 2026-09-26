@@ -46,11 +46,11 @@ Benchmarks are executed using [hyperfine](https://github.com/sharkdp/hyperfine).
 
 The [bin](../bin) directory contains a helper script, [comparison.sh](../bin/comparison.sh), which invokes `hyperfine` to run comparative benchmarks against other tools.
 
-Run the comparison in the benchmark shell:
+From the paq checkout, run the comparison against the EC2 template's Go corpus:
 
 ```bash
 nix develop .#benchmark
-bash bin/comparison.sh ./go --runs 20
+bash bin/comparison.sh /mnt/benchmark/target --runs 20
 ```
 
 The shell includes `merkle-hash`, a small [benchmark wrapper](../benches/merkle_hash)
@@ -68,13 +68,13 @@ To build and run the wrapper without Nix:
 
 ```bash
 cargo build --release --locked --manifest-path benches/merkle_hash/Cargo.toml --target-dir target
-./target/release/merkle-hash ./go
+./target/release/merkle-hash /mnt/benchmark/target
 ```
 
 Hyperfine benchmark commands starting with `find` use the following command with various `<hashsum>` implementations:
 
 ```bash
-find ./go -type f -print0 | LC_ALL=C sort -z | xargs -0 <hashsum> | <hashsum>
+find /mnt/benchmark/target -type f -print0 | LC_ALL=C sort -z | xargs -0 <hashsum> | <hashsum>
 ```
 
 ## Regression Testing

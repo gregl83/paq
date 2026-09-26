@@ -32,7 +32,7 @@ fn iterate_to_byte_vector(hashes: &[[u8; 32]]) -> Hash {
     blake3::hash(&bytes)
 }
 
-// Matches the allocation and copying in the current get_hashes_root.
+// Matches the allocation and copying in the previous get_hashes_root.
 fn copy_to_vector(hashes: &[[u8; 32]]) -> Hash {
     let mut bytes = Vec::with_capacity(hashes.len() * 32);
     for hash in hashes {
