@@ -80,6 +80,9 @@
             };
             packages = {
               default = self'.packages.paq;
+              merkle-hash = config.rust-project.crane-lib.buildPackage {
+                src = config.rust-project.crane-lib.cleanCargoSource ./benches/merkle_hash;
+              };
             };
             devShells = {
               # Default development shell
@@ -171,6 +174,20 @@
                       license = benchmarkPkgs.lib.licenses.mit;
                     };
                   };
+                  checksumdir = benchmarkPkgs.python3Packages.buildPythonApplication rec {
+                    pname = "checksumdir";
+                    version = "1.3.0";
+                    format = "wheel";
+
+                    src = benchmarkPkgs.fetchPypi {
+                      inherit pname version format;
+                      python = "py3";
+                      dist = "py3";
+                      sha256 = "29fd52a6258218752a3d8d2d7c998c6aca5d40dc6828fe1f7e98c631745da098";
+                    };
+
+                    pythonImportsCheck = [ "checksumdir" ];
+                  };
                   folderHash = benchmarkPkgs.buildNpmPackage rec {
                     pname = "folder-hash";
                     version = "4.1.1";
@@ -208,10 +225,12 @@
                       git
                       bash
                       dirhash
+                      checksumdir
                       folderHash
                     ]
                     ++ [
                       self'.packages.paq
+                      self'.packages.merkle-hash
                     ];
 
                   shellHook = ''
@@ -224,7 +243,9 @@
                     echo "  - $(b3sum --version)"
                     echo "  - $(sha256sum --version | head -n1)"
                     echo "  - dirhash ${dirhash.version}"
+                    echo "  - checksumdir ${checksumdir.version}"
                     echo "  - folder-hash ${folderHash.version}"
+                    echo "  - merkle_hash ${self'.packages.merkle-hash.version} (BLAKE3, names, parallel)"
                     echo "  - $(git --version)"
                     echo ""
                     echo "Run: ./bin/comparison.sh"

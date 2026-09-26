@@ -46,6 +46,31 @@ Benchmarks are executed using [hyperfine](https://github.com/sharkdp/hyperfine).
 
 The [bin](../bin) directory contains a helper script, [comparison.sh](../bin/comparison.sh), which invokes `hyperfine` to run comparative benchmarks against other tools.
 
+Run the comparison in the benchmark shell:
+
+```bash
+nix develop .#benchmark
+bash bin/comparison.sh ./go --runs 20
+```
+
+The shell includes `merkle-hash`, a small [benchmark wrapper](../benches/merkle_hash)
+for [merkle_hash](https://github.com/hristogochev/merkle_hash) 3.9.0. It prints the
+directory root hash using BLAKE3, filename hashing, and the library's default
+parallel processing. Its dependencies are pinned in a separate Cargo lockfile,
+and its release profile matches paq's. Compilation is outside the timed commands.
+
+This compares execution time, not identical hash values: the tools use different
+hash formats. In particular, `merkle_hash` follows symbolic links, while paq does
+not by default. Use a tree without symbolic links for this comparison, such as
+the pinned Go corpus, and keep hidden files included.
+
+To build and run the wrapper without Nix:
+
+```bash
+cargo build --release --locked --manifest-path benches/merkle_hash/Cargo.toml --target-dir target
+./target/release/merkle-hash ./go
+```
+
 Hyperfine benchmark commands starting with `find` use the following command with various `<hashsum>` implementations:
 
 ```bash
