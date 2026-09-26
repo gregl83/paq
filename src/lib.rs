@@ -61,12 +61,16 @@ fn filter(ignore_hidden: bool) -> impl FnMut(&DirEntry) -> bool {
     }
 }
 
-fn try_buffer_file_to_hasher(hasher: &mut Hasher, path: &Path) -> Result<(), Error> {
+fn try_buffer_file_to_hasher(
+    hasher: &mut Hasher,
+    path: &Path,
+    buffer: &mut [u8; FILE_BUFFER_SIZE],
+) -> Result<(), Error> {
     let mut file = fs::File::open(path).map_err(|source| Error::Io {
         path: path.to_path_buf(),
         source,
     })?;
-    let mut buffer = [0; FILE_BUFFER_SIZE];
+
     loop {
         let buffer_size = file.read(&mut buffer[..]).map_err(|source| Error::Io {
             path: path.to_path_buf(),
@@ -80,7 +84,11 @@ fn try_buffer_file_to_hasher(hasher: &mut Hasher, path: &Path) -> Result<(), Err
     Ok(())
 }
 
-fn try_hash_path(root: &Path, entry: &DirEntry) -> Result<[u8; 32], Error> {
+fn try_hash_path(
+    root: &Path,
+    entry: &DirEntry,
+    read_buffer: &mut [u8; FILE_BUFFER_SIZE],
+) -> Result<[u8; 32], Error> {
     let path = entry.path();
     let source_path = path
         .strip_prefix(root)
@@ -155,12 +163,12 @@ fn try_hash_path(root: &Path, entry: &DirEntry) -> Result<[u8; 32], Error> {
                     hasher.update(&mmap);
                 }
                 Err(_) => {
-                    try_buffer_file_to_hasher(&mut hasher, path)?;
+                    try_buffer_file_to_hasher(&mut hasher, path, read_buffer)?;
                 }
             }
         } else {
             // medium file size read using buffer
-            try_buffer_file_to_hasher(&mut hasher, path)?;
+            try_buffer_file_to_hasher(&mut hasher, path, read_buffer)?;
         }
     }
     Ok(*hasher.finalize().as_bytes())
@@ -225,9 +233,10 @@ pub fn try_hash_source(source: &Path, ignore_hidden: bool) -> Result<ArrayString
     let mut hashes: Vec<[u8; 32]> = batch_iter
         .par_bridge()
         .flat_map_iter(|batch| {
+            let mut read_buffer = [0u8; FILE_BUFFER_SIZE];
             batch
                 .into_iter()
-                .map(|entry| try_hash_path(source, &entry?))
+                .map(move |entry| try_hash_path(source, &entry?, &mut read_buffer))
         })
         .collect::<Result<_, Error>>()?;
 
@@ -284,7 +293,8 @@ mod tests {
             super::fs::write(&path, &file_contents).unwrap();
             let entry = file_entry(&path);
 
-            let hash = super::try_hash_path(&dir, &entry).unwrap();
+            let hash =
+                super::try_hash_path(&dir, &entry, &mut [0; super::FILE_BUFFER_SIZE]).unwrap();
             let mut hasher = super::Hasher::new();
             hasher.update(file_name.as_bytes());
             hasher.update(&[0, 0x01]);
@@ -300,7 +310,9 @@ mod tests {
         let path = super::Path::new(env!("CARGO_MANIFEST_DIR")).join("__paq_test_missing_path__");
         let mut hasher = super::Hasher::new();
 
-        let error = super::try_buffer_file_to_hasher(&mut hasher, &path).unwrap_err();
+        let error =
+            super::try_buffer_file_to_hasher(&mut hasher, &path, &mut [0; super::FILE_BUFFER_SIZE])
+                .unwrap_err();
         assert!(error
             .to_string()
             .starts_with(format!("failed to access path `{}`:", path.display()).as_str()));
@@ -319,7 +331,9 @@ mod tests {
         let dir = test_directory("it_returns_io_error_for_directory_read");
         let mut hasher = super::Hasher::new();
 
-        let error = super::try_buffer_file_to_hasher(&mut hasher, &dir).unwrap_err();
+        let error =
+            super::try_buffer_file_to_hasher(&mut hasher, &dir, &mut [0; super::FILE_BUFFER_SIZE])
+                .unwrap_err();
         assert!(matches!(
             error,
             super::Error::Io {
@@ -341,7 +355,8 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let error = super::try_hash_path(&root, &entry).unwrap_err();
+        let error =
+            super::try_hash_path(&root, &entry, &mut [0; super::FILE_BUFFER_SIZE]).unwrap_err();
         assert_eq!(
             error.to_string(),
             format!(
@@ -370,7 +385,8 @@ mod tests {
         let entry = file_entry(&path);
         super::fs::remove_file(&path).unwrap();
 
-        let error = super::try_hash_path(&dir, &entry).unwrap_err();
+        let error =
+            super::try_hash_path(&dir, &entry, &mut [0; super::FILE_BUFFER_SIZE]).unwrap_err();
         assert!(matches!(
             error,
             super::Error::Io {
@@ -396,7 +412,8 @@ mod tests {
         symlink(&target, &path).unwrap();
         let entry = file_entry(&path);
 
-        let error = super::try_hash_path(&dir, &entry).unwrap_err();
+        let error =
+            super::try_hash_path(&dir, &entry, &mut [0; super::FILE_BUFFER_SIZE]).unwrap_err();
         assert!(matches!(
             error,
             super::Error::InvalidUtf8Path(error_path) if error_path == target
