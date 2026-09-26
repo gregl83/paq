@@ -58,6 +58,31 @@ fn it_follows_root_directory_links_only_when_requested() {
 }
 
 #[test]
+fn it_hashes_broken_root_links_without_following() {
+    let dir = TempDir::new("cli_broken_root_link").unwrap();
+    dir.new_symlink("link", PathBuf::from("missing")).unwrap();
+    let link = dir.path().join("link");
+    let expected = paq::hash_source(&link, false, false).unwrap();
+    Command::new(cargo_bin!("paq"))
+        .arg(&link)
+        .assert()
+        .success()
+        .stdout(format!("{expected}\n"));
+
+    for flag in ["-L", "--follow"] {
+        let output = dir.path().join("result.paq");
+        Command::new(cargo_bin!("paq"))
+            .arg(flag)
+            .arg(&link)
+            .arg(format!("--out={}", output.display()))
+            .assert()
+            .code(1)
+            .stdout("");
+        assert!(!output.exists());
+    }
+}
+
+#[test]
 fn it_does_not_write_a_hash_when_following_fails() {
     let dir = TempDir::new("cli_follow_links_error").unwrap();
     dir.new_symlink("link", PathBuf::from(".")).unwrap();

@@ -50,7 +50,7 @@ impl TypedValueParser for PathBufferValueParser {
         value: &std::ffi::OsStr,
     ) -> Result<Self::Value, clap::Error> {
         let path = PathBuf::from(value);
-        if self.validate_exists && !path.exists() {
+        if self.validate_exists && path.symlink_metadata().is_err() {
             let mut err = clap::Error::new(ErrorKind::InvalidValue).with_cmd(cmd);
             err.insert(
                 ContextKind::InvalidArg,

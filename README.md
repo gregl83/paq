@@ -120,6 +120,8 @@ fn main() -> Result<(), paq::Error> {
 
 ## Content Limitations
 
+Files must remain unchanged during hashing; modifying memory-mapped files can cause undefined behavior, including crashes.
+
 Hashes are generated using file system content as input data to the `BLAKE3` hashing algorithm.
 
 By design, `paq` does NOT include file system metadata in hash input such as:
