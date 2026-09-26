@@ -61,12 +61,20 @@ fn filter(ignore_hidden: bool) -> impl FnMut(&DirEntry) -> bool {
     }
 }
 
+#[cfg(test)]
 fn try_buffer_file_to_hasher(hasher: &mut Hasher, path: &Path) -> Result<(), Error> {
+    read_with_scratch(hasher, path, &mut [0u8; FILE_BUFFER_SIZE])
+}
+fn read_with_scratch(
+    hasher: &mut Hasher,
+    path: &Path,
+    buffer: &mut [u8; FILE_BUFFER_SIZE],
+) -> Result<(), Error> {
     let mut file = fs::File::open(path).map_err(|source| Error::Io {
         path: path.to_path_buf(),
         source,
     })?;
-    let mut buffer = [0; FILE_BUFFER_SIZE];
+
     loop {
         let buffer_size = file.read(&mut buffer[..]).map_err(|source| Error::Io {
             path: path.to_path_buf(),
@@ -80,7 +88,15 @@ fn try_buffer_file_to_hasher(hasher: &mut Hasher, path: &Path) -> Result<(), Err
     Ok(())
 }
 
+#[cfg(test)]
 fn try_hash_path(root: &Path, entry: &DirEntry) -> Result<[u8; 32], Error> {
+    hash_with_scratch(root, entry, &mut [0u8; FILE_BUFFER_SIZE])
+}
+fn hash_with_scratch(
+    root: &Path,
+    entry: &DirEntry,
+    scratch: &mut [u8; FILE_BUFFER_SIZE],
+) -> Result<[u8; 32], Error> {
     let path = entry.path();
     let source_path = path
         .strip_prefix(root)
@@ -155,12 +171,12 @@ fn try_hash_path(root: &Path, entry: &DirEntry) -> Result<[u8; 32], Error> {
                     hasher.update(&mmap);
                 }
                 Err(_) => {
-                    try_buffer_file_to_hasher(&mut hasher, path)?;
+                    read_with_scratch(&mut hasher, path, scratch)?;
                 }
             }
         } else {
             // medium file size read using buffer
-            try_buffer_file_to_hasher(&mut hasher, path)?;
+            read_with_scratch(&mut hasher, path, scratch)?;
         }
     }
     Ok(*hasher.finalize().as_bytes())
@@ -225,9 +241,10 @@ pub fn try_hash_source(source: &Path, ignore_hidden: bool) -> Result<ArrayString
     let mut hashes: Vec<[u8; 32]> = batch_iter
         .par_bridge()
         .flat_map_iter(|batch| {
+            let mut scratch = [0u8; FILE_BUFFER_SIZE];
             batch
                 .into_iter()
-                .map(|entry| try_hash_path(source, &entry?))
+                .map(move |entry| hash_with_scratch(source, &entry?, &mut scratch))
         })
         .collect::<Result<_, Error>>()?;
 
