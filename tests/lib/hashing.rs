@@ -1,5 +1,9 @@
+use std::{
+    env,
+    path::PathBuf,
+};
+
 use crate::utils::TempDir;
-use std::{env, path::PathBuf};
 
 #[test]
 fn it_hashes_single_file() {

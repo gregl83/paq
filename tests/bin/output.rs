@@ -1,6 +1,11 @@
-use crate::utils::TempDir;
-use assert_cmd::{cargo::cargo_bin, Command};
 use std::path::PathBuf;
+
+use assert_cmd::{
+    cargo::cargo_bin,
+    Command,
+};
+
+use crate::utils::TempDir;
 
 #[test]
 fn it_outputs_directory_hash_using_default_source() {
@@ -9,13 +14,8 @@ fn it_outputs_directory_hash_using_default_source() {
     let dir = TempDir::new("it_outputs_directory_hash_using_default_source").unwrap();
 
     let mut cmd = Command::new(cargo_bin!("paq"));
-    let assert = cmd
-        .current_dir(dir.path())
-        .assert();
-    assert
-        .code(0)
-        .stdout(format!("{expectation}\n"))
-        .success();
+    let assert = cmd.current_dir(dir.path()).assert();
+    assert.code(0).stdout(format!("{expectation}\n")).success();
 }
 
 #[test]
@@ -30,13 +30,8 @@ fn it_outputs_file_hash_without_output() {
     let source = dir.path().join(file_name);
 
     let mut cmd = Command::new(cargo_bin!("paq"));
-    let assert = cmd
-        .arg(source.as_os_str().to_str().unwrap())
-        .assert();
-    assert
-        .code(0)
-        .stdout(format!("{expectation}\n"))
-        .success();
+    let assert = cmd.arg(source.as_os_str().to_str().unwrap()).assert();
+    assert.code(0).stdout(format!("{expectation}\n")).success();
 
     assert!(!dir.path().join(hash_file_name).exists());
 }
@@ -57,10 +52,7 @@ fn it_outputs_file_hash_using_default_short_arg() {
         .arg(source.as_os_str().to_str().unwrap())
         .arg("-o")
         .assert();
-    assert
-        .code(0)
-        .stdout(format!("{expectation}\n"))
-        .success();
+    assert.code(0).stdout(format!("{expectation}\n")).success();
 
     let file_hash = dir.read_file(hash_file_name).unwrap();
     assert_eq!(
@@ -84,10 +76,7 @@ fn it_outputs_directory_hash_using_default_short_arg() {
         .arg(source.as_os_str().to_str().unwrap())
         .arg("-o")
         .assert();
-    assert
-        .code(0)
-        .stdout(format!("{expectation}\n"))
-        .success();
+    assert.code(0).stdout(format!("{expectation}\n")).success();
 
     let file_hash = dir.read_file(hash_file_name).unwrap();
     assert_eq!(
@@ -114,10 +103,7 @@ fn it_outputs_file_hash_using_short_arg() {
         .arg(source.as_os_str().to_str().unwrap())
         .arg(format!("-o={}", output.as_os_str().to_str().unwrap()))
         .assert();
-    assert
-        .code(0)
-        .stdout(format!("{expectation}\n"))
-        .success();
+    assert.code(0).stdout(format!("{expectation}\n")).success();
 
     let file_hash = dir.read_file(hash_file_name).unwrap();
     assert_eq!(
@@ -142,10 +128,7 @@ fn it_outputs_file_hash_using_default_long_arg() {
         .arg(source.as_os_str().to_str().unwrap())
         .arg("--out")
         .assert();
-    assert
-        .code(0)
-        .stdout(format!("{expectation}\n"))
-        .success();
+    assert.code(0).stdout(format!("{expectation}\n")).success();
 
     let file_hash = dir.read_file(hash_file_name).unwrap();
     assert_eq!(
@@ -172,10 +155,7 @@ fn it_outputs_file_hash_using_long_arg() {
         .arg(source.as_os_str().to_str().unwrap())
         .arg(format!("--out={}", output.as_os_str().to_str().unwrap()))
         .assert();
-    assert
-        .code(0)
-        .stdout(format!("{expectation}\n"))
-        .success();
+    assert.code(0).stdout(format!("{expectation}\n")).success();
 
     let file_hash = dir.read_file(hash_file_name).unwrap();
     assert_eq!(

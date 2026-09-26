@@ -1,5 +1,9 @@
+use assert_cmd::{
+    cargo::cargo_bin,
+    Command,
+};
+
 use crate::utils::TempDir;
-use assert_cmd::{cargo::cargo_bin, Command};
 
 #[test]
 fn it_ignores_hidden_files_using_short_arg() {
@@ -16,10 +20,7 @@ fn it_ignores_hidden_files_using_short_arg() {
         .arg(source.as_os_str().to_str().unwrap())
         .arg("-i")
         .assert();
-    assert
-        .code(0)
-        .stdout(format!("{expectation}\n"))
-        .success();
+    assert.code(0).stdout(format!("{expectation}\n")).success();
 }
 
 #[test]
@@ -37,8 +38,5 @@ fn it_ignores_hidden_files_using_long_arg() {
         .arg(source.as_os_str().to_str().unwrap())
         .arg("--ignore-hidden")
         .assert();
-    assert
-        .code(0)
-        .stdout(format!("{expectation}\n"))
-        .success();
+    assert.code(0).stdout(format!("{expectation}\n")).success();
 }

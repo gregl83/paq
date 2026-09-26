@@ -1,15 +1,24 @@
 use std::{
     fs,
-    io::{self, prelude::*},
+    io::{
+        self,
+        prelude::*,
+    },
     iter,
-    path::{Path, PathBuf},
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
 pub use arrayvec::ArrayString;
 use blake3::Hasher;
 use memmap2::Mmap;
 use rayon::prelude::*;
-use walkdir::{DirEntry, WalkDir};
+use walkdir::{
+    DirEntry,
+    WalkDir,
+};
 
 pub const PATH_BATCH_SIZE: usize = 100;
 pub const MAX_FILE_SIZE_FOR_UNBUFFERED_READ: u64 = 1024 + 1;
@@ -403,7 +412,10 @@ mod tests {
     fn it_returns_error_for_invalid_utf8_symlink() {
         use std::{
             ffi::OsString,
-            os::{unix::ffi::OsStringExt, unix::fs::symlink},
+            os::unix::{
+                ffi::OsStringExt,
+                fs::symlink,
+            },
         };
 
         let dir = test_directory("it_returns_error_for_invalid_utf8_symlink");

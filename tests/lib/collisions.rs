@@ -1,6 +1,10 @@
-use crate::utils::{assert_distinct_tree_hashes, TempDir};
 #[cfg(target_family = "unix")]
 use std::path::PathBuf;
+
+use crate::utils::{
+    assert_distinct_tree_hashes,
+    TempDir,
+};
 
 #[cfg(target_family = "unix")]
 #[test]

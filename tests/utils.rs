@@ -1,10 +1,17 @@
-use std::env;
-use std::error;
-use std::fs::{self};
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::symlink;
-use std::path::{Path, PathBuf};
-use std::result;
+use std::{
+    env,
+    error,
+    fs::{
+        self,
+    },
+    path::{
+        Path,
+        PathBuf,
+    },
+    result,
+};
 
 pub const TEMP_DIRECTORY_NAME: &str = "paq";
 
@@ -82,11 +89,8 @@ impl TempDir {
     #[cfg(target_family = "unix")]
     pub fn new_symlink(&self, name: &str, target: PathBuf) -> Result<()> {
         let symlink_path = PathBuf::from(format!("{}/{}", self.path().display(), name));
-        symlink(target.as_os_str(), symlink_path.as_os_str())
-        .expect("Unable to create symlink");
-        Ok(
-            (),
-        )
+        symlink(target.as_os_str(), symlink_path.as_os_str()).expect("Unable to create symlink");
+        Ok(())
     }
 
     /// Return the underlying path to this temporary directory.

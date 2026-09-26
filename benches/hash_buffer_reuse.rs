@@ -1,12 +1,32 @@
 mod utils;
 
-use std::{fs, hint::black_box, io::Read, path::Path, path::PathBuf, time::Duration};
+use std::{
+    fs,
+    hint::black_box,
+    io::Read,
+    path::{
+        Path,
+        PathBuf,
+    },
+    time::Duration,
+};
 
-use blake3::{Hash, Hasher};
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use blake3::{
+    Hash,
+    Hasher,
+};
+use criterion::{
+    criterion_group,
+    criterion_main,
+    BenchmarkId,
+    Criterion,
+    Throughput,
+};
 use memmap2::Mmap;
 use paq::{
-    FILE_BUFFER_SIZE, MAX_FILE_SIZE_FOR_UNBUFFERED_READ, MIN_FILE_SIZE_FOR_MMAP_READ,
+    FILE_BUFFER_SIZE,
+    MAX_FILE_SIZE_FOR_UNBUFFERED_READ,
+    MIN_FILE_SIZE_FOR_MMAP_READ,
     PATH_BATCH_SIZE,
 };
 use rayon::prelude::*;

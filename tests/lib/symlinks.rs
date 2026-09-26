@@ -1,5 +1,6 @@
-use crate::utils::TempDir;
 use std::path::PathBuf;
+
+use crate::utils::TempDir;
 
 #[cfg(target_family = "unix")]
 #[test]

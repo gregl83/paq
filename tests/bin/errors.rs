@@ -1,5 +1,9 @@
+use assert_cmd::{
+    cargo::cargo_bin,
+    Command,
+};
+
 use crate::utils::TempDir;
-use assert_cmd::{cargo::cargo_bin, Command};
 
 #[test]
 fn it_returns_error_for_missing_output_directory() {

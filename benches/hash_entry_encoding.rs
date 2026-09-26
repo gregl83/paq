@@ -1,7 +1,18 @@
-use std::{hint::black_box, time::Duration};
+use std::{
+    hint::black_box,
+    time::Duration,
+};
 
-use blake3::{Hash, Hasher};
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use blake3::{
+    Hash,
+    Hasher,
+};
+use criterion::{
+    criterion_group,
+    criterion_main,
+    BenchmarkId,
+    Criterion,
+};
 
 // Const parameters keep encoding selection outside the measured hashing work.
 fn hash_entry<const TYPED: bool, const SEPARATED: bool, const COMBINED: bool>(

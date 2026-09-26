@@ -5,12 +5,6 @@
 //! cargo run -- -h
 //! ```
 
-use anyhow::Context;
-use clap::{
-    builder::TypedValueParser, crate_description, crate_name, crate_version, error::ContextKind,
-    error::ContextValue, error::ErrorKind, Arg, ArgAction, Command,
-};
-use paq::try_hash_source;
 use std::{
     fs::File,
     io::{
@@ -20,8 +14,25 @@ use std::{
     path::{
         Path,
         PathBuf,
-    }
+    },
 };
+
+use anyhow::Context;
+use clap::{
+    builder::TypedValueParser,
+    crate_description,
+    crate_name,
+    crate_version,
+    error::{
+        ContextKind,
+        ContextValue,
+        ErrorKind,
+    },
+    Arg,
+    ArgAction,
+    Command,
+};
+use paq::try_hash_source;
 
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
@@ -126,9 +137,8 @@ fn main() -> anyhow::Result<()> {
         } else {
             filepath.to_path_buf()
         };
-        write_hashfile(&output_filepath, hash.as_str()).with_context(|| {
-            format!("failed to write hash to `{}`", output_filepath.display())
-        })?;
+        write_hashfile(&output_filepath, hash.as_str())
+            .with_context(|| format!("failed to write hash to `{}`", output_filepath.display()))?;
     }
 
     println!("{hash}");

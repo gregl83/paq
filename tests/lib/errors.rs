@@ -6,9 +6,7 @@ fn it_returns_error_for_missing_source() {
     let source = dir.path().join("missing");
 
     let error = paq::try_hash_source(&source, true).unwrap_err();
-    assert!(error
-        .to_string()
-        .starts_with("failed to traverse source:"));
+    assert!(error.to_string().starts_with("failed to traverse source:"));
     assert!(matches!(error, paq::Error::Walk(_)));
 }
 

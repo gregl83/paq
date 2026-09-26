@@ -1,0 +1,8 @@
+unstable_features = true
+# enable import reordering
+reorder_imports = true
+# group imports into categories (Std, External, Crate)
+group_imports = "StdExternalCrate"
+# expand imports to be crate scoped
+imports_granularity = "Crate"
+imports_layout = "Vertical"

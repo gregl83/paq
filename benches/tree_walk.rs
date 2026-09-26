@@ -1,8 +1,19 @@
 mod utils;
 
-use std::{fs, hint::black_box, path::Path, time::Duration};
+use std::{
+    fs,
+    hint::black_box,
+    path::Path,
+    time::Duration,
+};
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{
+    criterion_group,
+    criterion_main,
+    BenchmarkId,
+    Criterion,
+    Throughput,
+};
 use utils::TempDir;
 
 fn entry_kind(kind: fs::FileType) -> u8 {
