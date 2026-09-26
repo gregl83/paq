@@ -1,5 +1,11 @@
 # Release notes
 
+## Hash compatibility
+
+v2 hashes are incompatible with v1.x because entry encoding now includes
+a NUL byte after the relative path and an entry-type byte. Regenerate stored
+hashes when upgrading.
+
 ## v2 library API migration
 
 `hash_source` now returns `Result<ArrayString<64>, Error>` and replaces both
