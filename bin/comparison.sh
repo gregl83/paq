@@ -10,7 +10,7 @@ printf -v TARGET_PATH '%q' "$1"
 shift
 
 hyperfine \
-  --shell bash \
+  --shell "bash -o pipefail" \
   "paq ${TARGET_PATH}" \
   "merkle-hash ${TARGET_PATH}" \
   "find ${TARGET_PATH} -type f -print0 | LC_ALL=C sort -z | xargs -0 b3sum | b3sum" \
