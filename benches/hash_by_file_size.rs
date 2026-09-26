@@ -47,10 +47,11 @@ fn bench_hash_by_file_size(c: &mut Criterion) {
 
         let file_name = format!("file_{n}");
 
-        dir.new_file_with_random_data(&file_name, SMALL_FILE_SIZE).unwrap();
+        dir.new_file_with_random_data(&file_name, n).unwrap();
 
         let source = dir.path().canonicalize().unwrap();
         let file_path= source.join(file_name);
+        assert_eq!(fs::metadata(&file_path).unwrap().len(), n);
 
         group.bench_with_input(
             BenchmarkId::new("unbuffered", n),

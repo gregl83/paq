@@ -32,6 +32,10 @@ panic = "abort"
 strip = true
 
 [[bench]]
+name = "hash_buffer_reuse"
+harness = false
+
+[[bench]]
 name = "hash_by_file_size"
 harness = false
 
@@ -48,11 +52,7 @@ name = "hash_list_hash"
 harness = false
 
 [[bench]]
-name = "hash_using_jwalk"
-harness = false
-
-[[bench]]
-name = "hash_using_walkdir"
+name = "tree_walk"
 harness = false
 
 [[bench]]

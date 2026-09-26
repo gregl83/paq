@@ -1,6 +1,7 @@
-use std::time::Duration;
+use std::{hint::black_box, time::Duration};
 
 use criterion::{
+    BatchSize,
     BenchmarkId,
     Criterion,
     criterion_group,
@@ -38,10 +39,14 @@ fn bench_hash_list_sort(c: &mut Criterion) {
             BenchmarkId::new("sequential", n),
             &file_hashes,
             |b, src| {
-                let mut v = src.clone();
-                b.iter(|| {
-                    v.sort_unstable();
-                });
+                b.iter_batched_ref(
+                    || src.clone(),
+                    |v| {
+                        v.sort_unstable();
+                        black_box(v);
+                    },
+                    BatchSize::SmallInput,
+                );
             }
         );
 
@@ -49,10 +54,14 @@ fn bench_hash_list_sort(c: &mut Criterion) {
             BenchmarkId::new("parallel", n),
             &file_hashes,
             |b, src| {
-                let mut v = src.clone();
-                b.iter(|| {
-                    v.par_sort_unstable();
-                });
+                b.iter_batched_ref(
+                    || src.clone(),
+                    |v| {
+                        v.par_sort_unstable();
+                        black_box(v);
+                    },
+                    BatchSize::SmallInput,
+                );
             }
         );
     }
