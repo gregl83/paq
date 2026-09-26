@@ -83,6 +83,37 @@ fn it_hashes_broken_root_links_without_following() {
 }
 
 #[test]
+fn it_writes_default_output_beside_root_links() {
+    let dir = TempDir::new("cli_root_link_output").unwrap();
+    std::fs::create_dir(dir.path().join("target")).unwrap();
+    dir.new_file("target/file", b"payload").unwrap();
+
+    for target in ["target", "target/file", "missing"] {
+        dir.new_symlink("link", PathBuf::from(target)).unwrap();
+        let link = dir.path().join("link");
+        for follow in [false, true] {
+            if follow && target == "missing" {
+                continue;
+            }
+            let expected = paq::hash_source(&link, false, follow).unwrap();
+            let mut command = Command::new(cargo_bin!("paq"));
+            command.current_dir(dir.path()).args(["-o", "link"]);
+            if follow {
+                command.arg("--follow");
+            }
+            command.assert().success().stdout(format!("{expected}\n"));
+            assert_eq!(
+                std::fs::read_to_string(dir.path().join("link.paq")).unwrap(),
+                format!("\"{expected}\"")
+            );
+            assert!(!dir.path().join(format!("{target}.paq")).exists());
+            std::fs::remove_file(dir.path().join("link.paq")).unwrap();
+        }
+        std::fs::remove_file(link).unwrap();
+    }
+}
+
+#[test]
 fn it_does_not_write_a_hash_when_following_fails() {
     let dir = TempDir::new("cli_follow_links_error").unwrap();
     dir.new_symlink("link", PathBuf::from(".")).unwrap();

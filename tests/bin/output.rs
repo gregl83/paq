@@ -19,6 +19,31 @@ fn it_outputs_directory_hash_using_default_source() {
 }
 
 #[test]
+fn it_outputs_directory_hash_using_dot_paths() {
+    let dir = TempDir::new("cli_dot_path_output").unwrap();
+    let parent = dir.path().join("parent");
+    let source = parent.join("source");
+    std::fs::create_dir_all(&source).unwrap();
+    for (input, target, output) in [
+        (".", &source, parent.join("source.paq")),
+        ("..", &parent, dir.path().join("parent.paq")),
+    ] {
+        let expected = paq::hash_source(target, false, false).unwrap();
+        Command::new(cargo_bin!("paq"))
+            .current_dir(&source)
+            .args(["-o", input])
+            .assert()
+            .success()
+            .stdout(format!("{expected}\n"));
+        assert_eq!(
+            std::fs::read_to_string(&output).unwrap(),
+            format!("\"{expected}\"")
+        );
+        std::fs::remove_file(output).unwrap();
+    }
+}
+
+#[test]
 fn it_outputs_file_hash_without_output() {
     let expectation = "31611f66817b666bccba70178e3bee75d23ed12fffc9bd30e98e1b912e73194e";
 

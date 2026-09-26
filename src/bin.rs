@@ -71,13 +71,18 @@ impl TypedValueParser for PathBufferValueParser {
 }
 
 fn derive_output_filepath(source: &Path) -> Result<PathBuf, Error> {
-    let source_canonical = source.canonicalize()?;
-    let mut source_filename = source_canonical
+    // Resolve dot paths to a directory name, but preserve named symlinks.
+    let source = if source.file_name().is_some() {
+        source.to_path_buf()
+    } else {
+        source.canonicalize()?
+    };
+    let mut source_filename = source
         .file_name()
         .ok_or_else(|| Error::other("source path has no file name"))?
         .to_os_string();
     source_filename.push(".paq");
-    Ok(source_canonical.with_file_name(source_filename))
+    Ok(source.with_file_name(source_filename))
 }
 
 fn write_hashfile(filepath: &Path, hash: &str) -> Result<(), Error> {
@@ -173,11 +178,13 @@ mod tests {
     }
 
     #[test]
-    fn it_returns_error_for_missing_output_source() {
+    fn it_derives_output_without_resolving_source() {
         let path = super::Path::new(env!("CARGO_MANIFEST_DIR")).join("__paq_test_missing_path__");
 
-        let error = super::derive_output_filepath(&path).unwrap_err();
-        assert_eq!(error.kind(), std::io::ErrorKind::NotFound);
+        assert_eq!(
+            super::derive_output_filepath(&path).unwrap(),
+            path.with_file_name("__paq_test_missing_path__.paq")
+        );
     }
 
     #[test]
