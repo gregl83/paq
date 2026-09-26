@@ -12,6 +12,8 @@ use rayon::prelude::*;
 use walkdir::{DirEntry, WalkDir};
 
 pub const PATH_BATCH_SIZE: usize = 100;
+// Allow work stealing within each batch while amortizing scheduling.
+const HASH_BATCH_MIN_LEN: usize = 4;
 pub const MAX_FILE_SIZE_FOR_UNBUFFERED_READ: u64 = 1024 + 1;
 #[cfg(not(target_os = "windows"))]
 pub const MIN_FILE_SIZE_FOR_MMAP_READ: u64 = 1024 * 1024 - 1;
@@ -176,6 +178,27 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
     blake3::hash(&flattened_bytes).to_hex()
 }
 
+fn next_path_batch<T>(
+    entries: &mut impl Iterator<Item = Result<T, Error>>,
+) -> Option<Vec<Result<T, Error>>> {
+    let mut batch = Vec::with_capacity(PATH_BATCH_SIZE);
+    for _ in 0..PATH_BATCH_SIZE {
+        match entries.next() {
+            Some(Ok(entry)) => batch.push(Ok(entry)),
+            Some(Err(error)) => {
+                batch.push(Err(error));
+                break;
+            }
+            None => break,
+        }
+    }
+    if batch.is_empty() {
+        None
+    } else {
+        Some(batch)
+    }
+}
+
 /// Hash system source directory or file with `BLAKE3`.
 ///
 /// Source **must** be a path to a directory or file.
@@ -199,34 +222,19 @@ pub fn try_hash_source(source: &Path, ignore_hidden: bool) -> Result<ArrayString
     let mut walker = WalkDir::new(source)
         .follow_links(false)
         .into_iter()
-        .filter_entry(filter(ignore_hidden));
+        .filter_entry(filter(ignore_hidden))
+        .map(|entry| entry.map_err(Error::Walk));
 
     // construct iterator that retrieves system path batches using walker
-    let batch_iter = iter::from_fn(move || {
-        let mut batch = Vec::with_capacity(PATH_BATCH_SIZE);
-        for _ in 0..PATH_BATCH_SIZE {
-            match walker.next() {
-                Some(Ok(entry)) => batch.push(Ok(entry)),
-                Some(Err(error)) => {
-                    batch.push(Err(Error::Walk(error)));
-                    break;
-                }
-                None => break,
-            }
-        }
-        if batch.is_empty() {
-            None
-        } else {
-            Some(batch)
-        }
-    });
+    let batch_iter = iter::from_fn(move || next_path_batch(&mut walker));
 
     // run hashing pipeline using parallel batching
     let mut hashes: Vec<[u8; 32]> = batch_iter
         .par_bridge()
-        .flat_map_iter(|batch| {
+        .flat_map(|batch| {
             batch
-                .into_iter()
+                .into_par_iter()
+                .with_min_len(HASH_BATCH_MIN_LEN)
                 .map(|entry| try_hash_path(source, &entry?))
         })
         .collect::<Result<_, Error>>()?;
@@ -262,6 +270,121 @@ mod tests {
                 (entry.path() == path).then_some(entry)
             })
             .unwrap()
+    }
+
+    #[test]
+    fn it_bounds_batches_and_retains_walk_errors() {
+        let dir = test_directory("batch_walk_errors");
+        for error_index in [
+            0,
+            super::PATH_BATCH_SIZE - 1,
+            super::PATH_BATCH_SIZE,
+            super::PATH_BATCH_SIZE + 1,
+        ] {
+            let walk_error = super::WalkDir::new(dir.join("missing"))
+                .into_iter()
+                .next()
+                .unwrap()
+                .unwrap_err();
+            let mut entries: Vec<Result<usize, super::Error>> = (0..error_index).map(Ok).collect();
+            entries.push(Err(super::Error::Walk(walk_error)));
+            entries.push(Ok(error_index + 1));
+            let mut entries = entries.into_iter();
+            let mut consumed = 0;
+            let mut errors = 0;
+            while let Some(batch) = super::next_path_batch(&mut entries) {
+                assert!(batch.len() <= super::PATH_BATCH_SIZE);
+                for (index, entry) in batch.iter().enumerate() {
+                    if let Err(error) = entry {
+                        assert!(matches!(error, super::Error::Walk(_)));
+                        assert_eq!(index + 1, batch.len(), "an error ends its batch");
+                        errors += 1;
+                    }
+                }
+                consumed += batch.len();
+            }
+            assert_eq!(consumed, error_index + 2);
+            assert_eq!(errors, 1);
+        }
+        super::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn it_hashes_batch_boundaries_with_one_and_multiple_workers() {
+        let pools: Vec<_> = [1, 4]
+            .into_iter()
+            .map(|workers| {
+                rayon::ThreadPoolBuilder::new()
+                    .num_threads(workers)
+                    .build()
+                    .unwrap()
+            })
+            .collect();
+        for count in [98, 99, 100, 101, 199, 200] {
+            let dir = test_directory(&format!("batch_boundary_{count}"));
+            let mut expected = vec![*blake3::hash(&[0, 0x02]).as_bytes()];
+            for index in 0..count {
+                let name = format!("file-{index:03}");
+                // Cluster medium payloads at the beginning of each batch.
+                let size = if index % super::PATH_BATCH_SIZE < 12 {
+                    64 * 1024
+                } else {
+                    index % 2
+                };
+                let contents = vec![(index % 251) as u8; size];
+                super::fs::write(dir.join(&name), &contents).unwrap();
+                let mut hasher = super::Hasher::new();
+                hasher.update(name.as_bytes());
+                hasher.update(&[0, 0x01]);
+                hasher.update(&contents);
+                expected.push(*hasher.finalize().as_bytes());
+            }
+            expected.sort_unstable();
+            let expected = super::get_hashes_root(expected);
+            for pool in &pools {
+                for ignore_hidden in [false, true] {
+                    assert_eq!(
+                        pool.install(|| super::try_hash_source(&dir, ignore_hidden))
+                            .unwrap(),
+                        expected
+                    );
+                }
+            }
+            super::fs::remove_dir_all(dir).unwrap();
+        }
+    }
+
+    #[cfg(target_family = "unix")]
+    #[test]
+    fn it_propagates_hashing_errors_across_parallel_batches() {
+        use std::{
+            ffi::OsString,
+            os::unix::{ffi::OsStringExt, fs::symlink},
+        };
+
+        let dir = test_directory("batch_hashing_error");
+        for index in 0..2 * super::PATH_BATCH_SIZE {
+            super::fs::write(dir.join(format!("file-{index:03}")), b"payload").unwrap();
+        }
+        let target = OsString::from_vec(vec![0xff]);
+        for name in ["aaa-link", "mmm-link", "zzz-link"] {
+            let path = dir.join(name);
+            symlink(&target, &path).unwrap();
+            for workers in [1, 4] {
+                let pool = rayon::ThreadPoolBuilder::new()
+                    .num_threads(workers)
+                    .build()
+                    .unwrap();
+                let error = pool
+                    .install(|| super::try_hash_source(&dir, false))
+                    .unwrap_err();
+                assert!(
+                    matches!(error, super::Error::InvalidUtf8Path(error_path) if error_path == super::Path::new(&target))
+                );
+            }
+            super::fs::remove_file(path).unwrap();
+        }
+        super::fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
