@@ -114,9 +114,10 @@ install_binary() {
 main() {
   case "${1:-}" in
   -h | --help)
+    # shellcheck disable=SC2016 # Show the literal variable name in help text.
     printf '%s\n' 'Usage: sh install.sh' \
       'PAQ_VERSION: release version (e.g. 2.0.0 or v2.0.0); default: latest' \
-      "PAQ_INSTALL_DIR: absolute installation directory; default: \$HOME/.local/bin" \
+      'PAQ_INSTALL_DIR: absolute installation directory; default: $HOME/.local/bin' \
       'Supports Linux x86/x64 (glibc) and macOS x64/arm64.'
     return
     ;;

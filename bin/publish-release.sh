@@ -3,7 +3,7 @@
 set -euo pipefail
 
 release_tag="${1:?release tag is required}"
-if [[ ! "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
+if [[ ! $release_tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
   echo "Invalid release tag: $release_tag" >&2
   exit 1
 fi
@@ -19,7 +19,7 @@ done
 
 # A retry may resume an incomplete draft, but must never replace public assets.
 if is_draft=$(gh release view "$release_tag" --json isDraft --jq .isDraft); then
-  if [[ "$is_draft" != true ]]; then
+  if [[ $is_draft != true ]]; then
     echo "Release $release_tag is already published; refusing to modify it." >&2
     exit 1
   fi
@@ -37,7 +37,7 @@ for asset in "${assets[@]}"; do
 done
 
 prerelease=false
-if [[ "${release_tag%%+*}" == *-* ]]; then
+if [[ ${release_tag%%+*} == *-* ]]; then
   prerelease=true
 fi
 gh release edit "$release_tag" --title "$release_tag" --draft=false --prerelease="$prerelease"
