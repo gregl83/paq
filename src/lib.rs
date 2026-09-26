@@ -194,26 +194,45 @@ fn get_hashes_root(file_hashes: Vec<[u8; 32]>) -> ArrayString<64> {
 
 /// Hash system source directory or file with `BLAKE3`.
 ///
-/// Source **must** be a path to a directory or file.
+/// Source may be a directory, file, or symbolic link.
 ///
 /// Each entry hashes its relative path, a NUL byte, its type byte
 /// (file: 1, directory: 2, symlink: 3, other: 4), and its payload. File payloads are
 /// contents; symlink payloads are target paths. Other entries have no payload.
 /// Sorted entry digests are concatenated and hashed to produce the source hash.
 ///
+/// When `follow_links` is true, links contribute their target's type and contents
+/// under the link's relative path; directory targets are traversed, including
+/// targets outside the source tree. Broken links and cycles return [`Error::Walk`].
+/// Hidden-entry filtering applies to the paths encountered during traversal.
+///
+/// When `follow_links` is false, links contribute their target-path text without
+/// resolving the target. This also applies when the source itself is a symlink.
+///
+/// # Errors
+///
+/// Returns [`Error`] if traversal, file access, or path encoding fails.
+///
 /// ```
 /// use paq;
 ///
 /// let source = std::path::PathBuf::from("example");
 /// let ignore_hidden = true;
-/// let source_hash: paq::ArrayString<64> = paq::try_hash_source(&source, ignore_hidden).unwrap();
+/// let follow_links = false;
+/// let source_hash = paq::hash_source(&source, ignore_hidden, follow_links)?;
 ///
 /// assert_eq!(&source_hash[..], "2d7ba6963c4836dcbd679607bc432afce5e3c4ef1dc0bed145c20d1b8e2bda77");
+/// # Ok::<(), paq::Error>(())
 /// ```
-pub fn try_hash_source(source: &Path, ignore_hidden: bool) -> Result<ArrayString<64>, Error> {
+pub fn hash_source(
+    source: &Path,
+    ignore_hidden: bool,
+    follow_links: bool,
+) -> Result<ArrayString<64>, Error> {
     // construct file system walker
     let mut walker = WalkDir::new(source)
-        .follow_links(false)
+        .follow_links(follow_links)
+        .follow_root_links(follow_links)
         .into_iter()
         .filter_entry(filter(ignore_hidden));
 
@@ -252,11 +271,6 @@ pub fn try_hash_source(source: &Path, ignore_hidden: bool) -> Result<ArrayString
     hashes.par_sort_unstable();
 
     Ok(get_hashes_root(hashes))
-}
-
-/// Hash file system source, panicking on error.
-pub fn hash_source(source: &Path, ignore_hidden: bool) -> ArrayString<64> {
-    try_hash_source(source, ignore_hidden).unwrap()
 }
 
 #[cfg(test)]
@@ -337,7 +351,7 @@ mod tests {
                 .build()
                 .unwrap();
             assert_eq!(
-                pool.install(|| super::try_hash_source(&dir, false))
+                pool.install(|| super::hash_source(&dir, false, false))
                     .unwrap(),
                 expected
             );

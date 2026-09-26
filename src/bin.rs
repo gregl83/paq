@@ -32,7 +32,7 @@ use clap::{
     ArgAction,
     Command,
 };
-use paq::try_hash_source;
+use paq::hash_source;
 
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
@@ -107,6 +107,13 @@ fn main() -> anyhow::Result<()> {
                 .help("Ignore directories or files starting with dot or full stop"),
         )
         .arg(
+            Arg::new("follow")
+                .short('L')
+                .long("follow")
+                .action(ArgAction::SetTrue)
+                .help("Follow symbolic links and hash their targets"),
+        )
+        .arg(
             Arg::new("filepath")
                 .short('o')
                 .long("out")
@@ -125,8 +132,9 @@ fn main() -> anyhow::Result<()> {
 
     let source = matches.get_one::<PathBuf>("src").unwrap();
     let ignore_hidden = matches.get_flag("ignore-hidden");
+    let follow_links = matches.get_flag("follow");
     let output: Option<&PathBuf> = matches.get_one::<PathBuf>("filepath");
-    let hash = try_hash_source(source, ignore_hidden)
+    let hash = hash_source(source, ignore_hidden, follow_links)
         .with_context(|| format!("failed to hash `{}`", source.display()))?;
 
     if let Some(filepath) = output {

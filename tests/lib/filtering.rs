@@ -12,9 +12,9 @@ fn it_hashes_directory_with_ignored_file() {
     dir.new_file(file_name, file_contents).unwrap();
     let source = dir.path().canonicalize().unwrap();
 
-    let hash_ignored = paq::hash_source(&source, true);
+    let hash_ignored = paq::hash_source(&source, true, false).unwrap();
     assert_eq!(&hash_ignored[..], expectation_ignored);
-    let hash_not_ignored = paq::hash_source(&source, false);
+    let hash_not_ignored = paq::hash_source(&source, false, false).unwrap();
     assert_eq!(&hash_not_ignored[..], expectation_not_ignored);
 }
 
@@ -28,9 +28,9 @@ fn it_hashes_directory_with_ignored_subdirectory() {
     let source = dir.path().canonicalize().unwrap();
 
     let subdir = TempDir::new("it_hashes_directory_with_ignored_subdirectory/.test").unwrap();
-    let hash_ignored = paq::hash_source(&source, true);
+    let hash_ignored = paq::hash_source(&source, true, false).unwrap();
     assert_eq!(&hash_ignored[..], expectation_ignored);
-    let hash_not_ignored = paq::hash_source(&source, false);
+    let hash_not_ignored = paq::hash_source(&source, false, false).unwrap();
     assert_eq!(&hash_not_ignored[..], expectation_not_ignored);
 
     println!(

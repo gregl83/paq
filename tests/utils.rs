@@ -22,8 +22,8 @@ pub type Result<T> = result::Result<T, Box<dyn error::Error + Send + Sync>>;
 pub fn assert_distinct_tree_hashes(left: &TempDir, right: &TempDir) {
     for ignore_hidden in [false, true] {
         assert_ne!(
-            paq::try_hash_source(left.path(), ignore_hidden).unwrap(),
-            paq::try_hash_source(right.path(), ignore_hidden).unwrap(),
+            paq::hash_source(left.path(), ignore_hidden, false).unwrap(),
+            paq::hash_source(right.path(), ignore_hidden, false).unwrap(),
             "distinct trees must not collide (ignore_hidden={ignore_hidden})"
         );
     }

@@ -12,3 +12,8 @@ mod filtering;
 #[allow(deprecated)]
 #[path = "bin/errors.rs"]
 mod errors;
+
+#[cfg(target_family = "unix")]
+#[allow(deprecated)]
+#[path = "bin/symlinks.rs"]
+mod symlinks;

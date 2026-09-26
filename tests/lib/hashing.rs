@@ -15,9 +15,9 @@ fn it_hashes_single_file() {
     dir.new_file(file_name, file_contents).unwrap();
     let source = dir.path().join(file_name);
 
-    let hash_ignored = paq::hash_source(&source, true);
+    let hash_ignored = paq::hash_source(&source, true, false).unwrap();
     assert_eq!(&hash_ignored[..], expectation);
-    let hash_not_ignored = paq::hash_source(&source, false);
+    let hash_not_ignored = paq::hash_source(&source, false, false).unwrap();
     assert_eq!(&hash_not_ignored[..], expectation);
 }
 
@@ -28,9 +28,9 @@ fn it_hashes_directory() {
     let dir = TempDir::new("it_hashes_directory").unwrap();
     let source = dir.path().canonicalize().unwrap();
 
-    let hash_ignored = paq::hash_source(&source, true);
+    let hash_ignored = paq::hash_source(&source, true, false).unwrap();
     assert_eq!(&hash_ignored[..], expectation);
-    let hash_not_ignored = paq::hash_source(&source, false);
+    let hash_not_ignored = paq::hash_source(&source, false, false).unwrap();
     assert_eq!(&hash_not_ignored[..], expectation);
 }
 
@@ -43,16 +43,16 @@ fn it_hashes_directory_from_any_path() {
     let original_path = env::current_dir().unwrap();
     let new_path = PathBuf::from("/");
 
-    let hash_ignored = paq::hash_source(&source, true);
+    let hash_ignored = paq::hash_source(&source, true, false).unwrap();
     assert_eq!(&hash_ignored[..], expectation);
-    let hash_ignored = paq::hash_source(&source, false);
+    let hash_ignored = paq::hash_source(&source, false, false).unwrap();
     assert_eq!(&hash_ignored[..], expectation);
 
     env::set_current_dir(new_path).unwrap();
 
-    let hash_ignored = paq::hash_source(&source, true);
+    let hash_ignored = paq::hash_source(&source, true, false).unwrap();
     assert_eq!(&hash_ignored[..], expectation);
-    let hash_ignored = paq::hash_source(&source, false);
+    let hash_ignored = paq::hash_source(&source, false, false).unwrap();
     assert_eq!(&hash_ignored[..], expectation);
 
     env::set_current_dir(original_path).unwrap();
@@ -68,9 +68,9 @@ fn it_hashes_directory_with_file() {
     dir.new_file(file_name, file_contents).unwrap();
     let source = dir.path().canonicalize().unwrap();
 
-    let hash_ignored = paq::hash_source(&source, true);
+    let hash_ignored = paq::hash_source(&source, true, false).unwrap();
     assert_eq!(&hash_ignored[..], expectation);
-    let hash_not_ignored = paq::hash_source(&source, false);
+    let hash_not_ignored = paq::hash_source(&source, false, false).unwrap();
     assert_eq!(&hash_not_ignored[..], expectation);
 }
 
@@ -99,9 +99,9 @@ fn it_hashes_directory_files_consistently() {
     let source = dir.path().canonicalize().unwrap();
 
     for _ in 0..50 {
-        let hash_ignored = paq::hash_source(&source, true);
+        let hash_ignored = paq::hash_source(&source, true, false).unwrap();
         assert_eq!(&hash_ignored[..], expectation);
-        let hash_not_ignored = paq::hash_source(&source, false);
+        let hash_not_ignored = paq::hash_source(&source, false, false).unwrap();
         assert_eq!(&hash_not_ignored[..], expectation);
     }
 }

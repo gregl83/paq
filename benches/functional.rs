@@ -29,7 +29,7 @@ fn bench_paq_library(c: &mut Criterion) {
     let source = dir.path().canonicalize().unwrap();
 
     group.bench_with_input("hashes_directory_with_files", &source, |b, source| {
-        b.iter(|| paq::hash_source(black_box(source), false))
+        b.iter(|| paq::hash_source(black_box(source), false, false).unwrap())
     });
 
     group.finish();

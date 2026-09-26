@@ -1,6 +1,7 @@
 # Releasing paq
 
 For end-user installation instructions, see the [installation guide](install.md).
+For library API migration details, see the [release notes](release-notes.md).
 
 ## Publishing a release
 

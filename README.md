@@ -83,37 +83,36 @@ paq ./example
 
 Path to example directory can be relative or absolute.
 
-Expect different results if `-i` or `--ignore-hidden` flag argument is used.
+Use `-i` / `--ignore-hidden` to omit hidden entries.
+
+Use `-L` / `--follow` to hash symbolic-link targets and traverse linked
+directories, including targets outside the source tree. Broken links and cycles
+return an error. Link following defaults to false: links are hashed by their
+target-path text, including when the source itself is a symbolic link.
+These options can change the resulting hash.
 
 ### Crate Library
 
 Add `paq` to project [dependencies](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-cratesio) in `Cargo.toml`.
+
+`hash_source` hashes a file or directory, with options to ignore hidden entries
+and follow symbolic links. Errors are returned as `paq::Error`.
 
 #### Use Library
 
 ```rust
 use paq;
 
-let source = std::path::PathBuf::from("/path/to/source");
-let ignore_hidden = true; // .dir or .file
-let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
+fn main() -> Result<(), paq::Error> {
+    let source = std::path::PathBuf::from("/path/to/source");
+    let ignore_hidden = true; // .dir or .file
+    let follow_links = false;
+    let source_hash = paq::hash_source(&source, ignore_hidden, follow_links)?;
 
-println!("{}", source_hash);
+    println!("{}", source_hash);
+    Ok(())
+}
 ```
-
-#### Hash Example Directory
-
-```rust
-use paq;
-
-let source = std::path::PathBuf::from("example");
-let ignore_hidden = true;
-let source_hash: paq::ArrayString<64> = paq::hash_source(&source, ignore_hidden);
-
-assert_eq!(&source_hash[..], "2d7ba6963c4836dcbd679607bc432afce5e3c4ef1dc0bed145c20d1b8e2bda77");
-```
-
-Expect different results if `ignore_hidden` is set to `false`.
 
 ## Content Limitations
 
@@ -126,7 +125,7 @@ By design, `paq` does NOT include file system metadata in hash input such as:
 - File modification and access times
 - File ACLs and extended attributes
 - Hard links
-- Symlink target contents (target path is hashed)
+- Symlink target contents unless `--follow` is enabled (otherwise the target path is hashed)
 
 Additionally, files or directory contents starting with dot or full stop _can_ optionally be ignored.
 
