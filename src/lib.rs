@@ -21,6 +21,7 @@ use walkdir::{
 };
 
 pub const PATH_BATCH_SIZE: usize = 100;
+pub const MIN_FILE_SIZE_FOR_PARALLEL_HASHING: usize = 16 * 1024 * 1024;
 pub const MAX_FILE_SIZE_FOR_UNBUFFERED_READ: u64 = 1024 + 1;
 #[cfg(not(target_os = "windows"))]
 pub const MIN_FILE_SIZE_FOR_MMAP_READ: u64 = 1024 * 1024 - 1;
@@ -169,7 +170,11 @@ fn try_hash_path(
             })?;
             match unsafe { Mmap::map(&file) } {
                 Ok(mmap) => {
-                    hasher.update(&mmap);
+                    if mmap.len() >= MIN_FILE_SIZE_FOR_PARALLEL_HASHING {
+                        hasher.update_rayon(&mmap);
+                    } else {
+                        hasher.update(&mmap);
+                    }
                 }
                 Err(_) => {
                     try_buffer_file_to_hasher(&mut hasher, path, read_buffer)?;
@@ -305,6 +310,38 @@ mod tests {
             assert_eq!(hash, *hasher.finalize().as_bytes());
         }
 
+        super::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn it_preserves_hashes_at_parallel_file_threshold() {
+        let dir = test_directory("parallel_file_threshold");
+        let threshold = super::MIN_FILE_SIZE_FOR_PARALLEL_HASHING;
+        let mut expected = vec![*blake3::hash(&[0, 0x02]).as_bytes()];
+        for size in [threshold - 1, threshold, threshold + 1] {
+            let name = format!("file-{size}");
+            let contents: Vec<u8> = (0..size).map(|i| (i % 251) as u8).collect();
+            super::fs::write(dir.join(&name), &contents).unwrap();
+            // sequential reference includes the path/type prefix before file bytes.
+            let mut hasher = super::Hasher::new();
+            hasher.update(name.as_bytes());
+            hasher.update(&[0, 0x01]);
+            hasher.update(&contents);
+            expected.push(*hasher.finalize().as_bytes());
+        }
+        expected.sort_unstable();
+        let expected = super::get_hashes_root(expected);
+        for workers in [1, 4] {
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(workers)
+                .build()
+                .unwrap();
+            assert_eq!(
+                pool.install(|| super::try_hash_source(&dir, false))
+                    .unwrap(),
+                expected
+            );
+        }
         super::fs::remove_dir_all(dir).unwrap();
     }
 
