@@ -28,8 +28,6 @@ The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb
 | [Hashrat][hashrat]                       | 1.25    | `hashrat -sha256 -dir -hidden ./go`     |       Pending |        — |        — |            — |
 | [GNU md5sum][gnumd5]                     | 9.11    | `find ./go ... md5sum`                  |       Pending |        — |        — |            — |
 
-directory-checksum, Hashrat, and GNU md5sum are included in the benchmark runner; their timings are pending a run in the documented benchmark environment.
-
 [paq]: https://github.com/gregl83/paq
 [merkle_hash]: https://github.com/hristogochev/merkle_hash
 [directory-checksum]: https://github.com/MShekow/directory-checksum

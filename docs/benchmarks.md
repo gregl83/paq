@@ -26,6 +26,8 @@ To prioritize accessibility and ease of reproduction, benchmarks are executed on
 
 The environment can be reproduced by creating a new CloudFormation stack using the [ec2-benchmark-template.yaml](../infra/ec2-benchmark-template.yaml) template.
 
+The benchmark instance defaults to `c6a.4xlarge` (16 vCPUs, 32 GiB RAM).
+
 ### Git Data Source Snapshot
 
 The [Go](https://github.com/golang/go) programming language repository serves as the data source for directory hashing benchmarks.
@@ -53,9 +55,12 @@ nix develop .#benchmark
 bash bin/comparison.sh /mnt/benchmark/target
 ```
 
-The runner performs three warmup runs per command and uses Hyperfine's default
-measurement run count, matching the EC2 template. To request a fixed count,
-append `--runs 20`. Additional Hyperfine options are passed through by the runner.
+The runner performs three warmup runs and 20 measured runs per command,
+including when invoked by the EC2 template. An explicit `--runs N` or `-r N`
+overrides the measured run count. Additional Hyperfine options are passed through.
+
+The comparison measures default CLI performance with a warm filesystem cache.
+The runner does not clear caches between runs.
 
 ### Compared tools
 
