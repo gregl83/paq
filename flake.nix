@@ -264,6 +264,7 @@
                     echo "  - $(hyperfine --version)"
                     echo "  - $(b3sum --version)"
                     echo "  - $(sha256sum --version | head -n1)"
+                    echo "  - $(md5sum --version | head -n1)"
                     echo "  - dirhash ${dirhash.version}"
                     echo "  - checksumdir ${checksumdir.version}"
                     echo "  - folder-hash ${folderHash.version}"

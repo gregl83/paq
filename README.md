@@ -26,8 +26,9 @@ The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb
 | [folder-hash][folder-hash]               | 4.1.1   | `folder-hash ./go`                      | 1847.0 ± 40.0 |   1786.0 |   1928.0 | 25.03 ± 0.55 |
 | [directory-checksum][directory-checksum] | 1.4.20  | `directory-checksum --max-depth=0 ./go` |       Pending |        — |        — |            — |
 | [Hashrat][hashrat]                       | 1.25    | `hashrat -sha256 -dir -hidden ./go`     |       Pending |        — |        — |            — |
+| [GNU md5sum][gnumd5]                     | 9.11    | `find ./go ... md5sum`                  |       Pending |        — |        — |            — |
 
-directory-checksum and Hashrat are included in the benchmark runner; their timings are pending a run in the documented benchmark environment.
+directory-checksum, Hashrat, and GNU md5sum are included in the benchmark runner; their timings are pending a run in the documented benchmark environment.
 
 [paq]: https://github.com/gregl83/paq
 [merkle_hash]: https://github.com/hristogochev/merkle_hash
@@ -35,6 +36,7 @@ directory-checksum and Hashrat are included in the benchmark runner; their timin
 [hashrat]: https://github.com/ColumPaget/Hashrat
 [checksumdir]: https://pypi.org/project/checksumdir/
 [b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
+[gnumd5]: https://www.gnu.org/software/coreutils/manual/html_node/md5sum-invocation.html
 [gnusha]: https://manpages.debian.org/testing/coreutils/sha256sum.1.en.html
 [dirhash]: https://github.com/andhus/dirhash-python
 [folder-hash]: https://github.com/marc136/node-folder-hash
