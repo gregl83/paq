@@ -249,6 +249,7 @@
                       folderHash
                     ]
                     ++ [
+                      pkgs.hashrat
                       self'.packages.paq
                       self'.packages.merkle-hash
                       self'.packages.directory-checksum
@@ -268,6 +269,7 @@
                     echo "  - folder-hash ${folderHash.version}"
                     echo "  - merkle_hash ${self'.packages.merkle-hash.version} (BLAKE3, names, parallel)"
                     echo "  - directory-checksum ${self'.packages.directory-checksum.version} (SHA-1)"
+                    echo "  - hashrat ${pkgs.hashrat.version} (SHA-256, directory mode, hidden entries)"
                     echo "  - $(git --version)"
                     echo ""
                     echo "Run: ./bin/comparison.sh"

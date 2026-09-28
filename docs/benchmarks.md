@@ -67,6 +67,7 @@ as the example target directory. Versions correspond to the benchmark shell.
 | [paq](https://github.com/gregl83/paq)                               | 2.0.0   | `paq ./go`                                                                         | BLAKE3    |
 | [merkle_hash](https://github.com/hristogochev/merkle_hash)          | 3.9.0   | `merkle-hash ./go`                                                                 | BLAKE3    |
 | [directory-checksum](https://github.com/MShekow/directory-checksum) | 1.4.20  | `directory-checksum --max-depth=0 ./go`                                            | SHA-1     |
+| [Hashrat](https://github.com/ColumPaget/Hashrat)                    | 1.25    | `hashrat -sha256 -dir -hidden ./go`                                                | SHA-256   |
 | [b3sum](https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum)    | 1.5.1   | `find ./go -type f -print0 \| LC_ALL=C sort -z \| xargs -0 b3sum \| b3sum`         | BLAKE3    |
 | [GNU sha2](https://www.gnu.org/software/coreutils/)                 | 9.11    | `find ./go -type f -print0 \| LC_ALL=C sort -z \| xargs -0 sha256sum \| sha256sum` | SHA-256   |
 | [dirhash](https://github.com/andhus/dirhash-python)                 | 0.5.0   | `dirhash ./go -a sha256`                                                           | SHA-256   |
@@ -81,6 +82,7 @@ and symbolic links differs:
 | paq                | Relative entry paths                                                | Included          | Hashes target-path text                                    |
 | merkle_hash        | File and directory names, including the root name                   | Included          | Follows file and directory links                           |
 | directory-checksum | Child names in directory listings                                   | Included          | Hashes target-path text                                    |
+| Hashrat            | Omitted; hashes concatenated file contents in traversal order       | Omitted           | Reads file-link targets; does not traverse directory links |
 | b3sum pipeline     | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `find -type f`                                  |
 | GNU sha2 pipeline  | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `find -type f`                                  |
 | dirhash            | File and directory names                                            | Omitted           | Follows file and directory links                           |
@@ -99,6 +101,13 @@ checksum listing. directory-checksum's `--max-depth=0` prints only the root
 checksum while still traversing and hashing the full tree. folder-hash prints
 the hash tree using its default CLI output. Output generation is part of the
 timed commands.
+
+Hashrat uses its published CLI with `-dir` to recursively hash the directory into
+one digest and `-hidden` to include dotfiles and hidden directories. The pinned
+build offers neither BLAKE3 nor BLAKE2, so `-sha256` matches the SHA-256 choice
+used for the other SHA-2 comparisons. Directory mode hashes the concatenated
+file contents in traversal order, without names or file boundaries; renaming
+files can still change the digest by changing that order.
 
 #### merkle_hash wrapper
 

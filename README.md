@@ -25,12 +25,14 @@ The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb
 | [GNU sha2][gnusha]                       | 9.11    | `find ./go ... sha256sum`               |  702.0 ± 34.2 |    661.6 |    793.4 |  9.51 ± 0.46 |
 | [folder-hash][folder-hash]               | 4.1.1   | `folder-hash ./go`                      | 1847.0 ± 40.0 |   1786.0 |   1928.0 | 25.03 ± 0.55 |
 | [directory-checksum][directory-checksum] | 1.4.20  | `directory-checksum --max-depth=0 ./go` |       Pending |        — |        — |            — |
+| [Hashrat][hashrat]                       | 1.25    | `hashrat -sha256 -dir -hidden ./go`     |       Pending |        — |        — |            — |
 
-directory-checksum is included in the benchmark runner; its timing is pending a run in the documented benchmark environment.
+directory-checksum and Hashrat are included in the benchmark runner; their timings are pending a run in the documented benchmark environment.
 
 [paq]: https://github.com/gregl83/paq
 [merkle_hash]: https://github.com/hristogochev/merkle_hash
 [directory-checksum]: https://github.com/MShekow/directory-checksum
+[hashrat]: https://github.com/ColumPaget/Hashrat
 [checksumdir]: https://pypi.org/project/checksumdir/
 [b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
 [gnusha]: https://manpages.debian.org/testing/coreutils/sha256sum.1.en.html
