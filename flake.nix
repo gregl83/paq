@@ -80,6 +80,26 @@
             };
             packages = {
               default = self'.packages.paq;
+              directory-checksum = pkgs.buildGoModule rec {
+                pname = "directory-checksum";
+                version = "1.4.20";
+
+                src = pkgs.fetchFromGitHub {
+                  owner = "MShekow";
+                  repo = pname;
+                  rev = "v${version}";
+                  hash = "sha256-TR27AmE+Js7+WW31yQGe7hraMKv+9ZI8G3SDdAlLMQk=";
+                };
+
+                vendorHash = "sha256-9jBW6KwRom2iLl2SYz/nqaOng3XNiriCQkU67N/llso=";
+
+                meta = {
+                  description = "Recursively compute directory checksums";
+                  homepage = "https://github.com/MShekow/directory-checksum";
+                  license = pkgs.lib.licenses.mit;
+                  mainProgram = "directory-checksum";
+                };
+              };
               merkle-hash = config.rust-project.crane-lib.buildPackage {
                 src = config.rust-project.crane-lib.cleanCargoSource ./benches/merkle_hash;
               };
@@ -231,6 +251,7 @@
                     ++ [
                       self'.packages.paq
                       self'.packages.merkle-hash
+                      self'.packages.directory-checksum
                     ];
 
                   shellHook = ''
@@ -246,6 +267,7 @@
                     echo "  - checksumdir ${checksumdir.version}"
                     echo "  - folder-hash ${folderHash.version}"
                     echo "  - merkle_hash ${self'.packages.merkle-hash.version} (BLAKE3, names, parallel)"
+                    echo "  - directory-checksum ${self'.packages.directory-checksum.version} (SHA-1)"
                     echo "  - $(git --version)"
                     echo ""
                     echo "Run: ./bin/comparison.sh"

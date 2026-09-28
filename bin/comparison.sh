@@ -13,6 +13,7 @@ hyperfine \
   --shell "bash -o pipefail" \
   "paq ${TARGET_PATH}" \
   "merkle-hash ${TARGET_PATH}" \
+  "directory-checksum --max-depth=0 ${TARGET_PATH}" \
   "find ${TARGET_PATH} -type f -print0 | LC_ALL=C sort -z | xargs -0 b3sum | b3sum" \
   "find ${TARGET_PATH} -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum" \
   "dirhash ${TARGET_PATH} -a sha256" \

@@ -15,18 +15,22 @@ Hash a directory or file with `BLAKE3`.
 
 The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb7939c) programming language repository was used as a test data source (157 MB / 14,490 files).
 
-| Tool                       | Version | Command                      |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
-| :------------------------- | :------ | :--------------------------- | ------------: | -------: | -------: | -----------: |
-| [paq][paq]                 | 2.0.0   | `paq ./go`                   |    73.8 ± 0.3 |     73.4 |     74.5 |         1.00 |
-| [merkle_hash][merkle_hash] | 3.9.0   | `merkle-hash ./go`           |    98.3 ± 1.0 |     97.2 |    101.0 |  1.33 ± 0.01 |
-| [b3sum][b3sum]             | 1.5.1   | `find ./go ... b3sum`        |  318.8 ± 10.2 |    304.0 |    340.7 |  4.32 ± 0.14 |
-| [checksumdir][checksumdir] | 1.3.0   | `checksumdir -a sha256 ./go` |   453.1 ± 6.5 |    446.5 |    470.6 |  6.14 ± 0.09 |
-| [dirhash][dirhash]         | 0.5.0   | `dirhash -a sha256 ./go`     |   574.9 ± 6.5 |    566.2 |    589.7 |  7.79 ± 0.09 |
-| [GNU sha2][gnusha]         | 9.11    | `find ./go ... sha256sum`    |  702.0 ± 34.2 |    661.6 |    793.4 |  9.51 ± 0.46 |
-| [folder-hash][folder-hash] | 4.1.1   | `folder-hash ./go`           | 1847.0 ± 40.0 |   1786.0 |   1928.0 | 25.03 ± 0.55 |
+| Tool                                     | Version | Command                                 |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
+| :--------------------------------------- | :------ | :-------------------------------------- | ------------: | -------: | -------: | -----------: |
+| [paq][paq]                               | 2.0.0   | `paq ./go`                              |    73.8 ± 0.3 |     73.4 |     74.5 |         1.00 |
+| [merkle_hash][merkle_hash]               | 3.9.0   | `merkle-hash ./go`                      |    98.3 ± 1.0 |     97.2 |    101.0 |  1.33 ± 0.01 |
+| [b3sum][b3sum]                           | 1.5.1   | `find ./go ... b3sum`                   |  318.8 ± 10.2 |    304.0 |    340.7 |  4.32 ± 0.14 |
+| [checksumdir][checksumdir]               | 1.3.0   | `checksumdir -a sha256 ./go`            |   453.1 ± 6.5 |    446.5 |    470.6 |  6.14 ± 0.09 |
+| [dirhash][dirhash]                       | 0.5.0   | `dirhash -a sha256 ./go`                |   574.9 ± 6.5 |    566.2 |    589.7 |  7.79 ± 0.09 |
+| [GNU sha2][gnusha]                       | 9.11    | `find ./go ... sha256sum`               |  702.0 ± 34.2 |    661.6 |    793.4 |  9.51 ± 0.46 |
+| [folder-hash][folder-hash]               | 4.1.1   | `folder-hash ./go`                      | 1847.0 ± 40.0 |   1786.0 |   1928.0 | 25.03 ± 0.55 |
+| [directory-checksum][directory-checksum] | 1.4.20  | `directory-checksum --max-depth=0 ./go` |       Pending |        — |        — |            — |
+
+directory-checksum is included in the benchmark runner; its timing is pending a run in the documented benchmark environment.
 
 [paq]: https://github.com/gregl83/paq
 [merkle_hash]: https://github.com/hristogochev/merkle_hash
+[directory-checksum]: https://github.com/MShekow/directory-checksum
 [checksumdir]: https://pypi.org/project/checksumdir/
 [b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
 [gnusha]: https://manpages.debian.org/testing/coreutils/sha256sum.1.en.html

@@ -59,6 +59,13 @@ directory root hash using BLAKE3, filename hashing, and the library's default
 parallel processing. Its dependencies are pinned in a separate Cargo lockfile,
 and its release profile matches paq's. Compilation is outside the timed commands.
 
+The shell also includes [directory-checksum](https://github.com/MShekow/directory-checksum)
+1.4.20, built from pinned source and Go dependencies. The comparison runs
+`directory-checksum --max-depth=0` to print only the root checksum; this limits
+output depth, not traversal or hashing depth. It uses SHA-1, includes hidden
+entries and empty directories, and hashes symbolic-link target paths without
+following them. Compilation is outside the timed commands.
+
 This compares execution time, not identical hash values: the tools use different
 hash formats. In particular, `merkle_hash` follows symbolic links, while paq does
 not by default. Use a tree without symbolic links for this comparison, such as
