@@ -20,13 +20,13 @@ The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb
 | [paq][paq]                               | 2.0.0   | `paq ./go`                              |    31.0 ± 0.4 |     30.4 |     31.7 |         1.00 |
 | [merkle_hash][merkle_hash]               | 3.9.0   | `merkle-hash ./go`                      |  120.3 ± 29.6 |     41.0 |    161.9 |  3.88 ± 0.95 |
 | [b3sum][b3sum]                           | 1.5.1   | `find ./go ... b3sum`                   |   372.2 ± 9.5 |    357.9 |    386.0 | 12.00 ± 0.34 |
+| [directory-checksum][directory-checksum] | 1.4.20  | `directory-checksum --max-depth=0 ./go` |   388.1 ± 3.1 |    382.0 |    393.8 | 12.51 ± 0.18 |
+| [GNU md5sum][gnumd5]                     | 9.11    | `find ./go ... md5sum`                  |   398.8 ± 3.0 |    393.7 |    403.5 | 12.85 ± 0.18 |
 | [checksumdir][checksumdir]               | 1.3.0   | `checksumdir -a sha256 ./go`            |   454.4 ± 7.9 |    443.1 |    469.9 | 14.64 ± 0.31 |
 | [dirhash][dirhash]                       | 0.5.0   | `dirhash -a sha256 ./go`                |   569.8 ± 5.2 |    561.9 |    581.8 | 18.36 ± 0.27 |
 | [GNU sha2][gnusha]                       | 9.11    | `find ./go ... sha256sum`               |   661.5 ± 8.7 |    650.4 |    682.2 | 21.32 ± 0.38 |
 | [folder-hash][folder-hash]               | 4.1.1   | `folder-hash ./go`                      | 1406.0 ± 62.0 |   1302.0 |   1575.0 | 45.29 ± 2.08 |
-| [directory-checksum][directory-checksum] | 1.4.20  | `directory-checksum --max-depth=0 ./go` |   388.1 ± 3.1 |    382.0 |    393.8 | 12.51 ± 0.18 |
 | [Hashrat][hashrat]                       | 1.25    | `hashrat -sha256 -dir -hidden ./go`     | 2095.0 ± 34.0 |   2061.0 |   2200.0 | 67.52 ± 1.35 |
-| [GNU md5sum][gnumd5]                     | 9.11    | `find ./go ... md5sum`                  |   398.8 ± 3.0 |    393.7 |    403.5 | 12.85 ± 0.18 |
 
 [paq]: https://github.com/gregl83/paq
 [merkle_hash]: https://github.com/hristogochev/merkle_hash
