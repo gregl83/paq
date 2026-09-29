@@ -69,32 +69,32 @@ as the example target directory. Versions correspond to the benchmark shell.
 
 | Tool                                                                | Version | Command                                                                            | Algorithm |
 | :------------------------------------------------------------------ | :------ | :--------------------------------------------------------------------------------- | :-------- |
-| [paq](https://github.com/gregl83/paq)                               | 2.0.0   | `paq ./go`                                                                         | BLAKE3    |
-| [merkle_hash](https://github.com/hristogochev/merkle_hash)          | 3.9.0   | `merkle-hash ./go`                                                                 | BLAKE3    |
-| [directory-checksum](https://github.com/MShekow/directory-checksum) | 1.4.20  | `directory-checksum --max-depth=0 ./go`                                            | SHA-1     |
-| [Hashrat](https://github.com/ColumPaget/Hashrat)                    | 1.25    | `hashrat -sha256 -dir -hidden ./go`                                                | SHA-256   |
 | [b3sum](https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum)    | 1.5.1   | `find ./go -type f -print0 \| LC_ALL=C sort -z \| xargs -0 b3sum \| b3sum`         | BLAKE3    |
-| [GNU sha2](https://www.gnu.org/software/coreutils/)                 | 9.11    | `find ./go -type f -print0 \| LC_ALL=C sort -z \| xargs -0 sha256sum \| sha256sum` | SHA-256   |
-| [GNU md5sum](https://www.gnu.org/software/coreutils/)               | 9.11    | `find ./go -type f -print0 \| LC_ALL=C sort -z \| xargs -0 md5sum \| md5sum`       | MD5       |
-| [dirhash](https://github.com/andhus/dirhash-python)                 | 0.5.0   | `dirhash ./go -a sha256`                                                           | SHA-256   |
 | [checksumdir](https://pypi.org/project/checksumdir/)                | 1.3.0   | `checksumdir -a sha256 ./go`                                                       | SHA-256   |
+| [directory-checksum](https://github.com/MShekow/directory-checksum) | 1.4.20  | `directory-checksum --max-depth=0 ./go`                                            | SHA-1     |
+| [dirhash](https://github.com/andhus/dirhash-python)                 | 0.5.0   | `dirhash ./go -a sha256`                                                           | SHA-256   |
 | [folder-hash](https://github.com/marc136/node-folder-hash)          | 4.1.1   | `folder-hash ./go`                                                                 | SHA-1     |
+| [GNU md5sum](https://www.gnu.org/software/coreutils/)               | 9.11    | `find ./go -type f -print0 \| LC_ALL=C sort -z \| xargs -0 md5sum \| md5sum`       | MD5       |
+| [GNU sha2](https://www.gnu.org/software/coreutils/)                 | 9.11    | `find ./go -type f -print0 \| LC_ALL=C sort -z \| xargs -0 sha256sum \| sha256sum` | SHA-256   |
+| [Hashrat](https://github.com/ColumPaget/Hashrat)                    | 1.25    | `hashrat -sha256 -dir -hidden ./go`                                                | SHA-256   |
+| [merkle_hash](https://github.com/hristogochev/merkle_hash)          | 3.9.0   | `merkle-hash ./go`                                                                 | BLAKE3    |
+| [paq](https://github.com/gregl83/paq)                               | 2.0.0   | `paq ./go`                                                                         | BLAKE3    |
 
 All commands include hidden entries. Their handling of names, empty directories,
 and symbolic links differs:
 
 | Tool                | Names in hash input                                                 | Empty directories | Symbolic links                                             |
 | :------------------ | :------------------------------------------------------------------ | :---------------- | :--------------------------------------------------------- |
-| paq                 | Relative entry paths                                                | Included          | Hashes target-path text                                    |
-| merkle_hash         | File and directory names, including the root name                   | Included          | Follows file and directory links                           |
-| directory-checksum  | Child names in directory listings                                   | Included          | Hashes target-path text                                    |
-| Hashrat             | Omitted; hashes concatenated file contents in traversal order       | Omitted           | Reads file-link targets; does not traverse directory links |
 | b3sum pipeline      | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `find -type f`                                  |
-| GNU sha2 pipeline   | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `find -type f`                                  |
-| GNU md5sum pipeline | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `find -type f`                                  |
-| dirhash             | File and directory names                                            | Omitted           | Follows file and directory links                           |
 | checksumdir         | Omitted; hashes file contents only                                  | Omitted           | Reads file-link targets; does not traverse directory links |
+| directory-checksum  | Child names in directory listings                                   | Included          | Hashes target-path text                                    |
+| dirhash             | File and directory names                                            | Omitted           | Follows file and directory links                           |
 | folder-hash         | File and directory names, including the root name                   | Included          | Follows file and directory links                           |
+| GNU md5sum pipeline | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `find -type f`                                  |
+| GNU sha2 pipeline   | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `find -type f`                                  |
+| Hashrat             | Omitted; hashes concatenated file contents in traversal order       | Omitted           | Reads file-link targets; does not traverse directory links |
+| merkle_hash         | File and directory names, including the root name                   | Included          | Follows file and directory links                           |
+| paq                 | Relative entry paths                                                | Included          | Hashes target-path text                                    |
 
 These runs compare execution time; the tools use different hash formats and are
 not expected to produce identical hashes. Use a tree without symbolic links,
