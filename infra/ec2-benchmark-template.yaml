@@ -7,9 +7,9 @@ Description: >
 Parameters:
   InstanceType:
     Type: String
-    Default: c6a.xlarge
-    Description: EC2 instance type (e.g., c6a.xlarge for cost-efficiency).
-    AllowedValues: [c6a.xlarge, m6i.2xlarge, m6i.4xlarge]
+    Default: c6a.4xlarge
+    Description: EC2 instance type (defaults to c6a.4xlarge with 16 vCPUs).
+    AllowedValues: [c6a.xlarge, c6a.4xlarge, m6i.2xlarge, m6i.4xlarge]
 
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName

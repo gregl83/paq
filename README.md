@@ -15,20 +15,26 @@ Hash a directory or file with `BLAKE3`.
 
 The [Go](https://github.com/golang/go/commit/6e676ab2b809d46623acb5988248d95d1eb7939c) programming language repository was used as a test data source (157 MB / 14,490 files).
 
-| Tool                       | Version | Command                      |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
-| :------------------------- | :------ | :--------------------------- | ------------: | -------: | -------: | -----------: |
-| [paq][paq]                 | 2.0.0   | `paq ./go`                   |    73.8 ± 0.3 |     73.4 |     74.5 |         1.00 |
-| [merkle_hash][merkle_hash] | 3.9.0   | `merkle-hash ./go`           |    98.3 ± 1.0 |     97.2 |    101.0 |  1.33 ± 0.01 |
-| [b3sum][b3sum]             | 1.5.1   | `find ./go ... b3sum`        |  318.8 ± 10.2 |    304.0 |    340.7 |  4.32 ± 0.14 |
-| [checksumdir][checksumdir] | 1.3.0   | `checksumdir -a sha256 ./go` |   453.1 ± 6.5 |    446.5 |    470.6 |  6.14 ± 0.09 |
-| [dirhash][dirhash]         | 0.5.0   | `dirhash -a sha256 ./go`     |   574.9 ± 6.5 |    566.2 |    589.7 |  7.79 ± 0.09 |
-| [GNU sha2][gnusha]         | 9.11    | `find ./go ... sha256sum`    |  702.0 ± 34.2 |    661.6 |    793.4 |  9.51 ± 0.46 |
-| [folder-hash][folder-hash] | 4.1.1   | `folder-hash ./go`           | 1847.0 ± 40.0 |   1786.0 |   1928.0 | 25.03 ± 0.55 |
+| Tool                                     | Version | Command                                 |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
+| :--------------------------------------- | :------ | :-------------------------------------- | ------------: | -------: | -------: | -----------: |
+| [paq][paq]                               | 2.0.0   | `paq ./go`                              |    31.0 ± 0.4 |     30.4 |     31.7 |         1.00 |
+| [merkle_hash][merkle_hash]               | 3.9.0   | `merkle-hash ./go`                      |  120.3 ± 29.6 |     41.0 |    161.9 |  3.88 ± 0.95 |
+| [b3sum][b3sum]                           | 1.5.1   | `find ./go ... b3sum`                   |   372.2 ± 9.5 |    357.9 |    386.0 | 12.00 ± 0.34 |
+| [directory-checksum][directory-checksum] | 1.4.20  | `directory-checksum --max-depth=0 ./go` |   388.1 ± 3.1 |    382.0 |    393.8 | 12.51 ± 0.18 |
+| [GNU md5sum][gnumd5]                     | 9.11    | `find ./go ... md5sum`                  |   398.8 ± 3.0 |    393.7 |    403.5 | 12.85 ± 0.18 |
+| [checksumdir][checksumdir]               | 1.3.0   | `checksumdir -a sha256 ./go`            |   454.4 ± 7.9 |    443.1 |    469.9 | 14.64 ± 0.31 |
+| [dirhash][dirhash]                       | 0.5.0   | `dirhash -a sha256 ./go`                |   569.8 ± 5.2 |    561.9 |    581.8 | 18.36 ± 0.27 |
+| [GNU sha2][gnusha]                       | 9.11    | `find ./go ... sha256sum`               |   661.5 ± 8.7 |    650.4 |    682.2 | 21.32 ± 0.38 |
+| [folder-hash][folder-hash]               | 4.1.1   | `folder-hash ./go`                      | 1406.0 ± 62.0 |   1302.0 |   1575.0 | 45.29 ± 2.08 |
+| [Hashrat][hashrat]                       | 1.25    | `hashrat -sha256 -dir -hidden ./go`     | 2095.0 ± 34.0 |   2061.0 |   2200.0 | 67.52 ± 1.35 |
 
 [paq]: https://github.com/gregl83/paq
 [merkle_hash]: https://github.com/hristogochev/merkle_hash
+[directory-checksum]: https://github.com/MShekow/directory-checksum
+[hashrat]: https://github.com/ColumPaget/Hashrat
 [checksumdir]: https://pypi.org/project/checksumdir/
 [b3sum]: https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum
+[gnumd5]: https://www.gnu.org/software/coreutils/manual/html_node/md5sum-invocation.html
 [gnusha]: https://manpages.debian.org/testing/coreutils/sha256sum.1.en.html
 [dirhash]: https://github.com/andhus/dirhash-python
 [folder-hash]: https://github.com/marc136/node-folder-hash
