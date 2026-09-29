@@ -239,6 +239,7 @@
                       b3sum
                       coreutils
                       findutils
+                      fd
                       gnugrep
                       gnused
                       gawk
@@ -263,6 +264,7 @@
                     echo "Package versions:"
                     echo "  - $(hyperfine --version)"
                     echo "  - $(b3sum --version)"
+                    echo "  - $(fd --version)"
                     echo "  - $(sha256sum --version | head -n1)"
                     echo "  - $(md5sum --version | head -n1)"
                     echo "  - dirhash ${dirhash.version}"

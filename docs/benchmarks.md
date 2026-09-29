@@ -52,6 +52,7 @@ From the paq checkout, run the comparison against the EC2 template's Go corpus:
 
 ```bash
 nix develop .#benchmark
+bash bin/verify-checksum-pipelines.sh /mnt/benchmark/target
 bash bin/comparison.sh /mnt/benchmark/target
 ```
 
@@ -62,36 +63,43 @@ overrides the measured run count. Additional Hyperfine options are passed throug
 The comparison measures default CLI performance with a warm filesystem cache.
 The runner does not clear caches between runs.
 
+Before publishing timings, run [verify-checksum-pipelines.sh](../bin/verify-checksum-pipelines.sh)
+on the benchmark VM. It checks that fd selects exactly the same files as find,
+then verifies each parallel pipeline against a serial reference over three runs.
+The serial reference sorts checksum records too; equality with the old aggregate
+digest is not expected. fd 10.1.0 is supplied by the same hash-pinned benchmark Nixpkgs
+snapshot as the other command-line utilities, and its version is printed on entry.
+
 ### Compared tools
 
 The following commands match [comparison.sh](../bin/comparison.sh), with `./go`
 as the example target directory. Versions correspond to the benchmark shell.
 
-| Tool                                                                | Version | Command                                                                            | Algorithm |
-| :------------------------------------------------------------------ | :------ | :--------------------------------------------------------------------------------- | :-------- |
-| [b3sum](https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum)    | 1.5.1   | `find ./go -type f -print0 \| LC_ALL=C sort -z \| xargs -0 b3sum \| b3sum`         | BLAKE3    |
-| [checksumdir](https://pypi.org/project/checksumdir/)                | 1.3.0   | `checksumdir -a sha256 ./go`                                                       | SHA-256   |
-| [directory-checksum](https://github.com/MShekow/directory-checksum) | 1.4.20  | `directory-checksum --max-depth=0 ./go`                                            | SHA-1     |
-| [dirhash](https://github.com/andhus/dirhash-python)                 | 0.5.0   | `dirhash ./go -a sha256`                                                           | SHA-256   |
-| [folder-hash](https://github.com/marc136/node-folder-hash)          | 4.1.1   | `folder-hash ./go`                                                                 | SHA-1     |
-| [GNU md5sum](https://www.gnu.org/software/coreutils/)               | 9.11    | `find ./go -type f -print0 \| LC_ALL=C sort -z \| xargs -0 md5sum \| md5sum`       | MD5       |
-| [GNU sha2](https://www.gnu.org/software/coreutils/)                 | 9.11    | `find ./go -type f -print0 \| LC_ALL=C sort -z \| xargs -0 sha256sum \| sha256sum` | SHA-256   |
-| [Hashrat](https://github.com/ColumPaget/Hashrat)                    | 1.25    | `hashrat -sha256 -dir -hidden ./go`                                                | SHA-256   |
-| [merkle_hash](https://github.com/hristogochev/merkle_hash)          | 3.9.0   | `merkle-hash ./go`                                                                 | BLAKE3    |
-| [paq](https://github.com/gregl83/paq)                               | 2.0.0   | `paq ./go`                                                                         | BLAKE3    |
+| Tool                                                                | Version | Command                                                                        | Algorithm |
+| :------------------------------------------------------------------ | :------ | :----------------------------------------------------------------------------- | :-------- |
+| [b3sum](https://github.com/BLAKE3-team/BLAKE3/tree/master/b3sum)    | 1.5.1   | `fd -HI -tf . ./go -0 \| xargs -0 -P0 b3sum \| LC_ALL=C sort \| b3sum`         | BLAKE3    |
+| [checksumdir](https://pypi.org/project/checksumdir/)                | 1.3.0   | `checksumdir -a sha256 ./go`                                                   | SHA-256   |
+| [directory-checksum](https://github.com/MShekow/directory-checksum) | 1.4.20  | `directory-checksum --max-depth=0 ./go`                                        | SHA-1     |
+| [dirhash](https://github.com/andhus/dirhash-python)                 | 0.5.0   | `dirhash ./go -a sha256`                                                       | SHA-256   |
+| [folder-hash](https://github.com/marc136/node-folder-hash)          | 4.1.1   | `folder-hash ./go`                                                             | SHA-1     |
+| [GNU md5sum](https://www.gnu.org/software/coreutils/)               | 9.11    | `fd -HI -tf . ./go -0 \| xargs -0 -P0 md5sum \| LC_ALL=C sort \| md5sum`       | MD5       |
+| [GNU sha2](https://www.gnu.org/software/coreutils/)                 | 9.11    | `fd -HI -tf . ./go -0 \| xargs -0 -P0 sha256sum \| LC_ALL=C sort \| sha256sum` | SHA-256   |
+| [Hashrat](https://github.com/ColumPaget/Hashrat)                    | 1.25    | `hashrat -sha256 -dir -hidden ./go`                                            | SHA-256   |
+| [merkle_hash](https://github.com/hristogochev/merkle_hash)          | 3.9.0   | `merkle-hash ./go`                                                             | BLAKE3    |
+| [paq](https://github.com/gregl83/paq)                               | 2.0.0   | `paq ./go`                                                                     | BLAKE3    |
 
 All commands include hidden entries. Their handling of names, empty directories,
 and symbolic links differs:
 
 | Tool                | Names in hash input                                                 | Empty directories | Symbolic links                                             |
 | :------------------ | :------------------------------------------------------------------ | :---------------- | :--------------------------------------------------------- |
-| b3sum pipeline      | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `find -type f`                                  |
+| b3sum pipeline      | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `fd -tf`                                        |
 | checksumdir         | Omitted; hashes file contents only                                  | Omitted           | Reads file-link targets; does not traverse directory links |
 | directory-checksum  | Child names in directory listings                                   | Included          | Hashes target-path text                                    |
 | dirhash             | File and directory names                                            | Omitted           | Follows file and directory links                           |
 | folder-hash         | File and directory names, including the root name                   | Included          | Follows file and directory links                           |
-| GNU md5sum pipeline | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `find -type f`                                  |
-| GNU sha2 pipeline   | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `find -type f`                                  |
+| GNU md5sum pipeline | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `fd -tf`                                        |
+| GNU sha2 pipeline   | File paths in checksum output, including the supplied target prefix | Omitted           | Omitted by `fd -tf`                                        |
 | Hashrat             | Omitted; hashes concatenated file contents in traversal order       | Omitted           | Reads file-link targets; does not traverse directory links |
 | merkle_hash         | File and directory names, including the root name                   | Included          | Follows file and directory links                           |
 | paq                 | Relative entry paths                                                | Included          | Hashes target-path text                                    |
@@ -103,8 +111,15 @@ path spelling consistent because some tools include it or the root name in the h
 
 The commands use default processing settings unless shown otherwise. paq and
 merkle_hash use parallel processing; dirhash uses its default single worker.
-The `find` pipelines sort file paths, hash each file, and hash the resulting
-checksum listing. directory-checksum's `--max-depth=0` prints only the root
+The `fd -HI -tf` pipelines discover files in parallel, including hidden and
+ignored files. `xargs -0 -P0` hashes with default batching and tool settings; no
+process counts, batch sizes, or BLAKE3 thread counts are tuned. Ordinary
+`LC_ALL=C sort` orders the newline-delimited checksum records after hashing,
+then the final checksum command hashes that listing. `sort -z` is not used for
+checksum output. These aggregate digests can differ from the previous pipelines,
+which sorted paths before hashing.
+
+directory-checksum's `--max-depth=0` prints only the root
 checksum while still traversing and hashing the full tree. folder-hash prints
 the hash tree using its default CLI output. Output generation is part of the
 timed commands. MD5 is included as a legacy performance baseline.
