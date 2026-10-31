@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/install-nix-action@31.11.3
       - run: nix flake check --print-build-logs
 
   cover:
@@ -41,7 +41,7 @@ jobs:
           rustup component add llvm-tools-preview
 
       - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@v2.87.29
+        uses: taiki-e/install-action@v2.87.31
         with:
           tool: cargo-llvm-cov
 
