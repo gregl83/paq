@@ -87,7 +87,7 @@ jobs:
           rustup component add llvm-tools-preview
 
       - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@v2.87.31
+        uses: taiki-e/install-action@v2.88.1
         with:
           tool: cargo-llvm-cov
 
